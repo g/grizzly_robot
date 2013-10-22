@@ -1,0 +1,13 @@
+<package>
+  <name>grizzly_bringup</name>
+  <version>0.0.1</version>
+  <description>
+    Upstart setup and launch files for Grizzly 
+  </description>
+  <maintainer email="mpurvis@clearpathrobotics.com">Mike Purvis</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>rospy</run_depend>
+</package>
+
+
