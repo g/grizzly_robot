@@ -5,6 +5,13 @@ find_package(catkin)
 
 catkin_package()
 
+add_executable(hardware_safety hardware_safety.cpp)
+target_link_libraries(hardware_safety ${catkin_LIBRARIES})
+
+install(TARGETS hardware_safety
+  RUNTIME_DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 
 install(PROGRAMS
   nodes/dead_reckoning.py
