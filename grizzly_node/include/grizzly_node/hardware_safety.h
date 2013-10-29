@@ -49,21 +49,35 @@ class HardwareSafety {
     double num_enc_fault_[NUM_MOTORS];
     bool mot_hearbeat_rxd_[NUM_MOTORS];
     bool mot_node_dead_[NUM_MOTORS];
-
     bool motor_fault_[NUM_MOTORS];
 
 
     // Publishers
-    ros::Publisher cmd_pub_fr_, cmd_pub_fl, cmd_pub_rr, cmd_pub_rl, cmd_estop;
+    ros::Publisher cmd_pub_fr_, cmd_pub_fl_, cmd_pub_rr_, cmd_pub_rl_, cmd_estop_;
     
     // Subscribers
-    ros::Subscriber stat_callback[NUM_MOTORS], feedback_callback[NUM_MOTORS],mcu_status_callback;
+    ros::Subscriber stat_callback_[NUM_MOTORS], fb_callback_[NUM_MOTORS],mcu_status_callback_;
+    ros::Subscriber cmd_vel_sub_;
+    // Timers
+    ros::Timer encoder_watchdog_timer_, mcu_watchdog_timer_, mot_watchdog_timer_
+
       
-    // Serious faults
-    int serious_fault[NUM_SERIOUS_FAULTS]
+    // A list serious faults, that would lear to immediate shutdown
+    int serious_fault_[NUM_SERIOUS_FAULTS]
 
     // Diagnostic Packager
-    MotionDiag motion_diag(); 
+    MotionDiag motion_diag_(); 
+
+    // Callback Functions
+    void fr_stat_callback(const roboteq_msgs::Status);
+    void fl_stat_callback(const roboteq_msgs::Status);
+    void rr_stat_callback(const roboteq_msgs::Status);
+    void rl_stat_callback(const roboteq_msgs::Status);
+
+    void fr_fb_callback(const roboteq_msgs::Feedback);
+    void fl_fb_callback(const roboteq_msgs::Feedback);
+    void rr_fb_callback(const roboteq_msgs::Feedback);
+    void rl_fb_callback(const roboteq_msgs::Feedback);
 
   public:
     HardwareSafety();
@@ -100,10 +114,10 @@ HardwareSafety::HardwareSafety()
   cmd_pub_rl_ = node_.advertise<roboteq_msgs::Command>("motors/rear_left/cmd",1);
   cmd_estop_ = node_.advertise<std_msgs::Bool>("system_estop",1);
 
-  serious_faults[0] = roboteq_msgs::Status.FAULT_OVERHEAT;
-  serious_faults[1] = roboteq_msgs::Status.FAULT_OVERVOLTAGE;
-  serious_faults[2] = roboteq_msgs::Status.FAULT_SHORT_CIRCUIT;
-  serious_faults[3] = roboteq_msgs::Status.FAULT_MOSFET_FAILURE;
+  serious_faults_[0] = roboteq_msgs::Status.FAULT_OVERHEAT;
+  serious_faults_[1] = roboteq_msgs::Status.FAULT_OVERVOLTAGE;
+  serious_faults_[2] = roboteq_msgs::Status.FAULT_SHORT_CIRCUIT;
+  serious_faults_[3] = roboteq_msgs::Status.FAULT_MOSFET_FAILURE;
 
   mcu_heartbeat_rxd_ = false;
   mcu_dead_ = false;
@@ -122,9 +136,48 @@ HardwareSafety::HardwareSafety()
     motor_fault[i] = false;
   }
     
-  stat_callback[0] = node_.subscribe("motors/front_right/status",
+  stat_callback_[FR] = node_.subscribe("motors/front_right/status",1,&HardwareSafety::fr_stat_callback,this);
+  stat_callback_[FL] = node_.subscribe("motors/front_right/status",1,&HardwareSafety::fr_stat_callback,this);
+  stat_callback_[RR] = node_.subscribe("motors/front_right/status",1,&HardwareSafety::fr_stat_callback,this);
+  stat_callback_[RL] = node_.subscribe("motors/front_right/status",1,&HardwareSafety::fr_stat_callback,this);
+
+  fb_callback_[FR] = node_.subscribe("motors/front_right/feedback",1,&HardwareSafety::fr_fb_callback,this);
+  fb_callback_[FL] = node_.subscribe("motors/front_left/feedback",1,&HardwareSafety::fr_fb_callback,this);
+  fb_callback_[RR] = node_.subscribe("motors/rear_right/feedback",1,&HardwareSafety::fr_fb_callback,this);
+  fb_callback_[RL] = node_.subscribe("motors/rear_left/feedback",1,&HardwareSafety::fr_fb_callback,this);
+
+  mcu_status_callback = node_.subscribe("mcu/status",1,&HardwareSafety::mcu_stat_callback,this);
+
+    
+}
+
+void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
+
+void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
+
+void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
+
+void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
+
+
+
+void HardwareSafety::fr_fb_callback(const roboteq_msgs::Feedback data) {
 
 }
+
+void HardwareSafety::fl_fb_callback(const roboteq_msgs::Feedback data) {
+
+}
+
+void HardwareSafety::rr_fb_callback(const roboteq_msgs::Feedback data) {
+
+}
+
+void HardwareSafety::rl_fb_callback(const roboteq_msgs::Feedback data) {
+
+}
+
+
 
 
 
