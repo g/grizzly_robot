@@ -50,6 +50,7 @@ class HardwareSafety {
     bool mot_hearbeat_rxd_[NUM_MOTORS];
     bool mot_node_dead_[NUM_MOTORS];
     bool motor_fault_[NUM_MOTORS];
+    int pre_charge_timeout;
 
 
     // Publishers
@@ -123,17 +124,19 @@ HardwareSafety::HardwareSafety()
   mcu_dead_ = false;
   estop_status_ = grizzly_msgs::RawStatus.ERROR_ESTOP_RESET;
   precharge_malfunction_ = false
+  pre_charge_timeout = 0;
 
   for (int i=0;i<NUM_MOTORS;i++) {
-    mot_setting[i] = 0;
-    encreading[i] = 0;
-    enc_tics_in_error[i] = 0; // track number of consecutive error measurements that were too large
-    encoder_fault[i] = false; // assume encoders are okay
-    num_enc_fault[i] = 0;
-    mot_heartbeat_rxd[i] = false;
-    mot_node_dead[i] = true;
+    mot_setting_[i] = 0;
+    encreading_[i] = 0;
 
-    motor_fault[i] = false;
+    enc_tics_in_error_[i] = 0; // track number of consecutive error measurements that were too large
+    encoder_fault_[i] = false; // assume encoders are okay
+    num_enc_fault_[i] = 0;
+    mot_heartbeat_rxd_[i] = false;
+    mot_node_dead_[i] = true;
+
+    motor_fault_[i] = false;
   }
     
   stat_callback_[FR] = node_.subscribe("motors/front_right/status",1,&HardwareSafety::fr_stat_callback,this);
@@ -148,36 +151,159 @@ HardwareSafety::HardwareSafety()
 
   mcu_status_callback = node_.subscribe("mcu/status",1,&HardwareSafety::mcu_stat_callback,this);
 
+  encoder_watchdog_timer_ = node_.createTimer(ros::Duration(enc_watchdog_period_),&HardwareSafety::encoder_callback,this);
+  mcu_watchdog_timer_ = node_.createTimer(ros::Duration(mcu_watchdog_time_), &HardwareSafety::mcu_watchdog_callback,this);
+  mot_watchdog_timer_ = node_.createTimer(ros::Duration(mot_watchdog_time_), &HardwareSafety::mot_watchdog_callback,this);
+
+  cmd_vel_sub_ = node_.subscribe("safe_cmd_vel",1,&HardwareSafety::vel_callback,this);
     
 }
 
-void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
+void HardwareSafety::mcu_watchdog_callback(const ros::TimerEvent& event) {
+  if (mcu_heartbeat_rxd_) {
+    mcu_dead_ = true;
+    std::string out_str = "MCU Communication is inactive. Vehicle has been deactivated. Please reset systems";
+    ROS_ERROR(out_str.c_str());
+    //TODO:Publish diag
+  }
+  else {
+    std::string out_str = "MCU Communication is active and OK";
+    mcu_heartbeat_rxd = false;
+    mcu_dead = false;
+    //TODO:Publish diagnostics
+  }
 
-void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
+  if (estop_status_ == grizzly_msgs::RawStatus.ERROR_BRK_DET) { 
+    pre_charge_timeout+=1;
+  else
+    pre_charge_timeout = 0;
 
-void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
+  if (pre_charge_timeout > (4.0/(mcu_watchdog_time_))) {
+    precharge_malfunction_ = true;
+    std_msgs::Bool estop_out;
+    estop_out.data = true;
+    cmd_estop_.publish(estop_out);
+    std::string error_str = "Precharge malfunction. EStop activated. Please reboot all systems";
+    ROS_ERROR(error_str.c_str());
+    //TODO:Publish diagnostics
+  }
+  else if (estop_status_!=0) {
+    std::string warn_str = "EStop is activate. Vehicle will not move";
+    precharge_malfunction_ = false;
+    ROS_WARN(warn_str);
+    //TODO:Publish diagnostics
+  }
+  else {
+    precharge_malfunction_ = false;
+    std::string ok_str = "EStop System Open and Functional";
+    //TODO:Publish diagnostics
+  }
 
-void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status data)
-
-
-
-void HardwareSafety::fr_fb_callback(const roboteq_msgs::Feedback data) {
 
 }
 
-void HardwareSafety::fl_fb_callback(const roboteq_msgs::Feedback data) {
+void HardwareSafety::mcu_stat_callback(grizzly_msgs::RawStatus& data) {
+  mcu_heartbeat_rxd_ = true;
+  estop_status_ = data->error;
+}
+
+void HardwareSafety::vel_callback(const geometry_msgs::Twist& data)
+{
+  double right_speed = data->linear.x + (data->angular.z)*(width_/2.0);
+  double left_speed = data->linear.x - (data->angular.z)*(width_/2.0);
+
+  mot_setting_[FR] = -right_speed * roboteq_scale_;
+  mot_setting_[FL] = left_speed * roboteq_scale_;
+  mot_setting_[RR] = -right_speed * roboteq_scale_;
+  mot_setting_[RL] = left_speed * roboteq_scale_;
+
+  //Dont send command if
+  //a) Motor is fault (incl. encoder issues)
+  //b) Motor node is dead
+  //c) MCU node is dead
+  //d) Estop is not cleared and/or pre-charge is not completed
+  //e) There is an encoder fault
+
+  bool fault_check = true; //assume everything is okay. 
+  for (int i = 0;i<NUM_MOTORS;i++) {
+    //ideally all faults should be false
+    fault_check = !motor_fault_[i];
+    fault_check = !mot_node_dead_[i];
+    fault_check = !encoder_fault_[i];
+  }
+
+  if (mcu_dead_) 
+    fault_check = false;  
+
+  if (estop_status_!=0)
+    fault_check = false;
+
+  roboteq_msgs::Command data_out;
+  if (fault_check) {
+    data_out.setpoint = mot_setting_[FR];
+    cmd_pub_fr.publish(data_out);
+    data_out.setpoint = mot_setting_[FL];
+    cmd_pub_fl.publish(data_out);
+    data_out.setpoint = mot_setting_[RR];
+    cmd_pub_rr.publish(data_out);
+    data_out.setpoint = mot_setting_[RL];
+    cmd_pub_rl.publish(data_out);
+  }
+  else {
+    data_out.setpoint = 0;
+    cmd_pub_fr.publish(data_out);
+    cmd_pub_fl.publish(data_out);
+    cmd_pub_rr.publish(data_out);
+    cmd_pub_rl.publish(data_out);
+  }
+} 
+
+
+
+void HardwareSafety::fr_stat_callback(const roboteq_msgs::Status& data) {
+  check_motor(data->fault, FR);
+  mot_heartbeat_rxd_[FR] = true;
+}
+
+void HardwareSafety::fl_stat_callback(const roboteq_msgs::Status& data) {
+  check_motor(data->fault, FL);
+  mot_heartbeat_rxd_[FL] = true;
+}
+
+void HardwareSafety::rr_stat_callback(const roboteq_msgs::Status& data)
+ {
+   check_motor(data->fault,RR);
+   mot_heartbeat_rxd_[RR] = true;
+}
+void HardwareSafety::rl_stat_callback(const roboteq_msgs::Status& data) {
+  check_motor(data->fault,RL);
+  mot_heartbeat_rxd_[RL] = true;
+}
+
+void mot_watchdog_callback(const ros::TimerEvent& event) {
+  for (int i=0;i<NUM_MOTORS;i++) {
+    
+
+  }
+
 
 }
 
-void HardwareSafety::rr_fb_callback(const roboteq_msgs::Feedback data) {
+void HardwareSafety::fr_fb_callback(const roboteq_msgs::Feedback& data) {
 
 }
 
-void HardwareSafety::rl_fb_callback(const roboteq_msgs::Feedback data) {
+void HardwareSafety::fl_fb_callback(const roboteq_msgs::Feedback& data) {
 
 }
 
+void HardwareSafety::rr_fb_callback(const roboteq_msgs::Feedback& data) {
 
+}
+
+void HardwareSafety::rl_fb_callback(const roboteq_msgs::Feedback& data) {
+
+}
 
 
 
