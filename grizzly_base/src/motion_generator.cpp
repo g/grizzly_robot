@@ -27,6 +27,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <geometry_msgs/Twist.h>
 #include <grizzly_msgs/Drive.h>
 
+/**
+ * Manages a single subscription to Twist messages, produces a Grizzly Drive
+ * message with the appropriate individual wheel speeds.
+ */
 class MotionGenerator
 {
 public:
@@ -48,6 +52,11 @@ protected:
   double width_, radius_;
 };
 
+/**
+ * Open-loop mapping between linear/angular commands and individual wheel speed
+ * commands. Currently very naive, but in the future may provide some further
+ * intelligence, though not closed-loop control.
+ */
 void MotionGenerator::twist_callback(const geometry_msgs::TwistConstPtr& twist)
 {
   double right_speed = twist->linear.x + twist->angular.z * (width_ / 2);
@@ -60,6 +69,9 @@ void MotionGenerator::twist_callback(const geometry_msgs::TwistConstPtr& twist)
   pub_.publish(drive);
 }
 
+/**
+ * Main entry point.
+ */
 int main (int argc, char ** argv)
 {
   ros::init(argc, argv, "grizzly_motion_generator"); 
