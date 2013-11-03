@@ -1,17 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(grizzly_base)
 
-find_package(catkin REQUIRED COMPONENTS roscpp diagnostic_updater roboteq_msgs )
+find_package(catkin REQUIRED COMPONENTS roscpp diagnostic_updater roboteq_msgs geometry_msgs)
 catkin_package()
 
-add_executable(${PROJECT_NAME}_motion_generator src/motion_generator)
-target_link_libraries(${PROJECT_NAME}_motion_generator ${catkin_LIBRARIES})
-set_target_properties(${PROJECT_NAME}_motion_generator
-                      PROPERTIES OUTPUT_NAME motion_generator PREFIX "")
-
-install(TARGETS ${PROJECT_NAME}_motion_generator
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+add_subdirectory(src)
 
 install(PROGRAMS
   # nodes/dead_reckoning.py
