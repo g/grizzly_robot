@@ -1,24 +1,33 @@
 <?xml version="1.0"?>
 <package>
-  <name>grizzly_node</name>
+  <name>grizzly_base</name>
   <version>0.0.1</version>
   <description>
-    grizzly_node package that contains various nodes and scripts to communicate with lower lever hardware that control the Grizzly vehicle
-  
+    Package contains C++ and Python nodes which make up the low level interface to the motor
+    drivers, thermal management, and power system on board Grizzly. 
   </description>
 
   <author email="rgariepy@clearpathrobotics.com">Ryan Gariepy</author>
+  <author email="mpurvis@clearpathrobotics.com">Mike Purvis</author>
   <maintainer email="pmukherj@clearpathrobotics.com">Prasenjit Mukherjee</maintainer>
-
   <license>BSD</license>
+
   <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>grizzly_msgs</build_depend>
+  <build_depend>roboteq_msgs</build_depend>
+  <build_depend>diagnostic_updater</build_depend>
+
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>grizzly_msgs</run_depend>
   <run_depend>roboteq_msgs</run_depend>
+  <run_depend>diagnostic_updater</run_depend>
   <run_depend>tf</run_depend>
-
 </package>
 
 
