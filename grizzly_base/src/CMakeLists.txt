@@ -1,17 +1,9 @@
-
-add_executable(${PROJECT_NAME}_motion_generator motion_generator)
-target_link_libraries(${PROJECT_NAME}_motion_generator ${catkin_LIBRARIES})
-set_target_properties(${PROJECT_NAME}_motion_generator
-                      PROPERTIES OUTPUT_NAME motion_generator PREFIX "")
-
-add_executable(${PROJECT_NAME}_motion_safety motion_safety)
-target_link_libraries(${PROJECT_NAME}_motion_safety ${catkin_LIBRARIES})
-set_target_properties(${PROJECT_NAME}_motion_safety
-                      PROPERTIES OUTPUT_NAME motion_safety PREFIX "")
+add_executable(${PROJECT_NAME}_motor_fanout motor_fanout)
+target_link_libraries(${PROJECT_NAME}_motor_fanout ${catkin_LIBRARIES})
+set_target_properties(${PROJECT_NAME}_motor_fanout
+                        PROPERTIES OUTPUT_NAME motor_fanout PREFIX "")
 
 install(TARGETS
-  ${PROJECT_NAME}_motion_generator
-  ${PROJECT_NAME}_motion_safety
+  ${PROJECT_NAME}_motor_fanout
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
