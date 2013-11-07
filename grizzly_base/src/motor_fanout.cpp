@@ -36,6 +36,8 @@ class DataTimeout : public std::runtime_error
 public:
   DataTimeout(ros::Duration age) :
     runtime_error("Data exceeded maximum specified age.") {}
+  DataTimeout() :
+    runtime_error("Data exceeded maximum specified age.") {}
 };
 
 class RoboteqInterface
@@ -57,10 +59,15 @@ public:
     pub_cmd_.publish(cmd);
   }
 
-  float getMeasuredSpeed()
+  float getMeasuredVelocity()
   {
+    if (!last_feedback_)
+    {
+      throw DataTimeout();
+    }
     ros::Duration age(ros::Time::now() - last_feedback_->header.stamp);
-    if (age > telemetry_timeout_) {
+    if (age > telemetry_timeout_)
+    {
       throw DataTimeout(age);
     }
     return last_feedback_->measured_velocity[0];
@@ -115,16 +122,33 @@ protected:
  */
 void MotorFanout::driveCallback(const grizzly_msgs::DriveConstPtr& drive)
 {
-  front_left.cmdVelocity(drive->front_left / gear_ratio_);
-  front_right.cmdVelocity(drive->front_right / gear_ratio_);
-  rear_left.cmdVelocity(drive->rear_left / gear_ratio_);
-  rear_right.cmdVelocity(drive->rear_right / gear_ratio_);
+  front_left.cmdVelocity(drive->front_left * gear_ratio_);
+  front_right.cmdVelocity(drive->front_right * gear_ratio_);
+  rear_left.cmdVelocity(drive->rear_left * gear_ratio_);
+  rear_right.cmdVelocity(drive->rear_right * gear_ratio_);
 }
 
+/**
+ * For now, this is very naive; no attempt at all is made to synchronize with the incoming
+ * Roboteq messages. A possible future implementation could examine the time gaps between
+ * the four incoming topics, and then decide to trigger publication of the output message
+ * on whichever feedback message arrives "last" of the group. */
 void MotorFanout::encodersPublishCallback(const ros::TimerEvent& timer_event)
 {
   grizzly_msgs::Drive encoders;
-  pub_encoders_.publish(encoders);
+  encoders.header.stamp = ros::Time::now();
+  try
+  {
+    encoders.front_left = front_left.getMeasuredVelocity() / gear_ratio_;
+    encoders.front_right = front_right.getMeasuredVelocity() / gear_ratio_;
+    encoders.rear_left = rear_left.getMeasuredVelocity() / gear_ratio_;
+    encoders.rear_right = rear_right.getMeasuredVelocity() / gear_ratio_;
+    pub_encoders_.publish(encoders);
+  }
+  catch (DataTimeout)
+  {
+    ROS_WARN_THROTTLE(10, "Encoder data from motor drivers missing or too delayed to republish.");
+  }
 }
 
 /**
