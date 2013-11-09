@@ -23,10 +23,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <ros/ros.h>
-#include <grizzly_msgs/Drive.h>
-#include <roboteq_msgs/Command.h>
-#include <roboteq_msgs/Feedback.h>
+#include "ros/ros.h"
+#include "grizzly_msgs/Drive.h"
+#include "roboteq_msgs/Command.h"
+#include "roboteq_msgs/Feedback.h"
 
 #include <boost/foreach.hpp>
 #include <stdexcept>
