@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+
+import rospy
+
+from grizzly_msgs.msg import RawStatus
+from math import log
+from std_msgs.msg import Float32
+
+RO = 10000
+TO = 25
+CTOK = 273.15
+B_THERM = 3380
+
+class ADCInterpreter(object):
+    def __init__(self):
+        rospy.init_node('temp_adc_interpreter')
+
+        rospy.Subscriber('status', RawStatus, self.translate_adc)
+        self.temp_pub = rospy.Publisher('body_temp',Float32);
+        
+
+    def translate_adc(self,data):
+        temp_adc = data.body_temp_adc
+        temp_res = RO/((1023.0/temp_adc)-1)
+        temp_frac = (temp_res/RO)
+        temp_log = log(temp_frac)
+        temp_log = temp_log/B_THERM
+        temp = 1/(1/(TO + CTOK) + temp_log) - CTOK
+        curr_temp = Float32()
+        curr_temp.data = temp
+        self.temp_pub.publish(curr_temp)
+
+if __name__ == "__main__":
+    ADCInterpreter()
+    rospy.spin()
