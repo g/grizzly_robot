@@ -1,14 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-# Node to estimate power usage!
-
-import roslib; roslib.load_manifest('grizzly_node')
 import rospy
 
 from std_msgs.msg import Float32
 from roboteq_msgs.msg import Feedback
 from grizzly_msgs.msg import RawStatus
+
 from math import exp
+from functools import partial
 
 FR = 0
 FL = 1
@@ -21,7 +20,7 @@ class EnergyEstimation:
     def __init__(self):
         rospy.init_node('energy_estimation')
 
-        self.numbatpacks = rospy.get_param('numbatpacks',2)
+        self.battery_string_count = rospy.get_param('battery_string_count', 2)
         
         # Publishers & subscribers
         self.energy_pub = rospy.Publisher('mcu/energy', Float32)
@@ -41,22 +40,21 @@ class EnergyEstimation:
 
         self.init_soc = 0
 
-        self.full_bat_cap = 105*48*self.numbatpacks #105 A.h in each battery, x 48v for watt.H x number of battery packs(2 or 4) 
-
+        # 105 Ah in each battery x 48v for W-H x number of battery packs (2 or 4) 
+        self.full_bat_cap = 105*48*self.battery_string_count
+        
         # Timing
         self.rate = rospy.Rate(rospy.get_param('~hz',25))
         self.period = 1.0/rospy.get_param('~hz',25)
 
         rospy.Subscriber('mcu/status', RawStatus, self.HandleUserStatus)
-        rospy.Subscriber('motors/front_right/feedback', Feedback, self.HandleFRFeedback)
-        rospy.Subscriber('motors/front_left/feedback', Feedback, self.HandleFLFeedback)
-        rospy.Subscriber('motors/rear_left/feedback', Feedback, self.HandleRLFeedback)
-        rospy.Subscriber('motors/rear_right/feedback', Feedback, self.HandleRRFeedback)
-
+        rospy.Subscriber('motors/front_left/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, FL))
+        rospy.Subscriber('motors/front_right/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, FR))
+        rospy.Subscriber('motors/rear_left/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, RL)))
+        rospy.Subscriber('motors/rear_right/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, RR))
 
         while (not self.process_first_voltage() and (not rospy.is_shutdown())):
             self.rate.sleep()
-
 
         total_wattage = Float32()
         while not rospy.is_shutdown():
@@ -65,21 +63,8 @@ class EnergyEstimation:
             self.energy_pub.publish(total_wattage)  
             self.rate.sleep()
 
-    def HandleFRFeedback(self, data):
-        self.process_mot_vi(data,FR) 
-            
-    def HandleFLFeedback(self, data):
-        self.process_mot_vi(data,FL)
-
-    def HandleRLFeedback(self, data):
-        self.process_mot_vi(data,RL)
-
-    def HandleRRFeedback(self, data):
-        self.process_mot_vi(data,RR)
-
     # get current and voltage (power), integrate over time to get Watt.hours
     def HandleUserStatus(self,data):
-
         if (not self.first_user_volt_rxd):
             self.first_user_volt_rxd = True
             self.first_user_volt = data.voltage
@@ -95,9 +80,7 @@ class EnergyEstimation:
             self.last_user_watt = curr_w
             self.last_user_time = curr_t
 
-
-    def process_mot_vi(self,data,motor_num):
-
+    def HandleMotorVoltageCurrent(self,motor_num,data):
         if (not self.first_motor_volt_rxd[motor_num]):
             self.first_motor_volt_rxd[motor_num] = True
             self.first_motor_volts[motor_num] = data.supply_voltage
@@ -124,9 +107,7 @@ class EnergyEstimation:
             elif (avg_meas_volt <= l_thresh):
                 self.init_soc = 0.000
             else:
-                self.init_soc = self.get_soc_estimate(avg_meas_volt)
-
-            
+                self.init_soc = self.get_soc_estimate(avg_meas_volt) 
             return True
         else:
             return False

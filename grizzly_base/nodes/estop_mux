@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Controls mcu/estop based on input from system_estop or teleop_estop
 

@@ -1,8 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-# Fan control.
-
-import roslib; roslib.load_manifest('grizzly_node')
 import rospy
 
 from std_msgs.msg import Bool, Float32
@@ -17,11 +14,11 @@ class FanControl:
     def __init__(self):
         rospy.init_node('fan_control')
         
-        self.safe_motor_temp = rospy.get_param('safe_motor_temp',60)
-        self.safe_ch_temp = rospy.get_param('safe_ch_temp',50)
-        self.safe_ic_temp = rospy.get_param('safe_ic_temp',50)
-        self.safe_body_temp = rospy.get_param('safe_body_temp',50)
-        self.hyst_size = rospy.get_param('hyst_size',10)
+        self.safe_motor_temp = rospy.get_param('safe_motor_temp', 60)
+        self.safe_ch_temp = rospy.get_param('safe_ch_temp', 50)
+        self.safe_ic_temp = rospy.get_param('safe_ic_temp', 50)
+        self.safe_body_temp = rospy.get_param('safe_body_temp', 50)
+        self.hyst_size = rospy.get_param('hyst_size', 10)
 
         self.fan_state = False
 
@@ -31,18 +28,17 @@ class FanControl:
         self.ic_temp = [0,0,0,0]
         self.motor_temp = [0,0,0,0]
 
-
         # Timing
-        self.rate = rospy.Rate(rospy.get_param('~hz',50))
-        self.period = 1.0/rospy.get_param('~hz',50)
+        hz = rospy.get_param('~hz',50)
+        self.rate = rospy.Rate(hz))
 
         # Publishers & subscribers
         self.cmd_fan = rospy.Publisher('mcu/fan', Bool)
         rospy.Subscriber('mcu/body_temp', Float32, self.HandleBodyTempStatus)
-        rospy.Subscriber('motors/front_right/status', Status, self.HandleFRStatus)
-        rospy.Subscriber('motors/front_left/status', Status, self.HandleFLStatus)
-        rospy.Subscriber('motors/rear_left/status', Status, self.HandleRLStatus)
-        rospy.Subscriber('motors/rear_right/status', Status, self.HandleRRStatus)
+        rospy.Subscriber('motors/front_left/status', Status, partial(HandleMotorStatus, FL))
+        rospy.Subscriber('motors/front_right/status', Status, partial(HandleMotorStatus, FR))
+        rospy.Subscriber('motors/rear_left/status', Status, partial(HandleMotorStatus, RL))
+        rospy.Subscriber('motors/rear_right/status', Status, partial(HandleMotorStatus, RR))
 
         while not rospy.is_shutdown():
             """ Main state machine loop """
@@ -53,19 +49,7 @@ class FanControl:
     def HandleBodyTempStatus(self, data):
         self.body_temp = data.data
 
-    def HandleFRStatus(self, data):
-        self.process_temps(data,FR) 
-
-    def HandleFLStatus(self, data):
-        self.process_temps(data,FL)
-
-    def HandleRLStatus(self, data):
-        self.process_temps(data,RL)
-
-    def HandleRRStatus(self, data):
-        self.process_temps(data,RR)
-
-    def process_temps(self,data,motor_num):
+    def HandleMotorStatus(self, motor_num, data):
         self.motor_temp[motor_num] = data.motor_temperature[0]
         self.channel1_temp[motor_num]  = data.channel_temperature[0]
         self.channel2_temp[motor_num] = data.channel_temperature[1]
