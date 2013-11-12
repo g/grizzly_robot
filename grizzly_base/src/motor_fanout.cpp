@@ -55,7 +55,7 @@ public:
   void cmdVelocity(float vel)
   {
     roboteq_msgs::Command cmd;
-    cmd.commanded_velocity.push_back(vel); 
+    cmd.commanded_velocity = vel; 
     pub_cmd_.publish(cmd);
   }
 
@@ -70,7 +70,7 @@ public:
     {
       throw DataTimeout(age);
     }
-    return last_feedback_->measured_velocity[0];
+    return last_feedback_->measured_velocity;
   }
 
 protected: 
