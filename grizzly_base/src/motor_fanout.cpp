@@ -54,7 +54,6 @@ public:
 
   void cmdVelocity(float vel)
   {
-    ROS_INFO("vel %f", vel);
     roboteq_msgs::Command cmd;
     cmd.commanded_velocity = vel; 
     pub_cmd_.publish(cmd);
