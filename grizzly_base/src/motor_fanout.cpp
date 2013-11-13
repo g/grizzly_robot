@@ -54,6 +54,7 @@ public:
 
   void cmdVelocity(float vel)
   {
+    ROS_INFO("vel %f", vel);
     roboteq_msgs::Command cmd;
     cmd.commanded_velocity = vel; 
     pub_cmd_.publish(cmd);
@@ -91,16 +92,24 @@ protected:
 class MotorFanout
 {
 public:
-  MotorFanout(double gear_ratio, ros::Duration telemetry_period, ros::Duration telemetry_timeout) :
-    nh_(""),
-    sub_drive_(nh_.subscribe("cmd_drive", 1, &MotorFanout::driveCallback, this)),
-    encoder_timer_(nh_.createTimer(telemetry_period, &MotorFanout::encodersPublishCallback, this)),
-    pub_encoders_(nh_.advertise<grizzly_msgs::Drive>("encoders", 1)),
-    front_left("front_left", telemetry_timeout),
-    front_right("front_right", telemetry_timeout),
-    rear_left("rear_left", telemetry_timeout),
-    rear_right("rear_right", telemetry_timeout)
+  MotorFanout() : nh_(""), gear_ratio_(50.0)
   { 
+    ros::param::param<double>("~gear_ratio", gear_ratio_, gear_ratio_);
+
+    double telemetry_timeout_secs(0.11), telemetry_period_secs(0.05);
+    ros::param::param<double>("~telemetry_timeout", telemetry_timeout_secs, telemetry_timeout_secs);
+    ros::param::param<double>("~telemetry_period", telemetry_period_secs, telemetry_period_secs);
+
+    ros::Duration telemetry_period(telemetry_period_secs); 
+    sub_drive_ = nh_.subscribe("cmd_drive", 1, &MotorFanout::driveCallback, this);
+    encoder_timer_ = nh_.createTimer(telemetry_period, &MotorFanout::encodersPublishCallback, this);
+    pub_encoders_ = nh_.advertise<grizzly_msgs::Drive>("encoders", 1);
+
+    ros::Duration telemetry_timeout(telemetry_timeout_secs); 
+    motors.front_left.reset(new RoboteqInterface("motors/front_left", telemetry_timeout));
+    motors.front_right.reset(new RoboteqInterface("motors/front_right", telemetry_timeout));
+    motors.rear_left.reset(new RoboteqInterface("motors/rear_left", telemetry_timeout));
+    motors.rear_right.reset(new RoboteqInterface("motors/rear_right", telemetry_timeout));
   }
 
 protected:
@@ -113,7 +122,9 @@ protected:
   ros::Publisher pub_encoders_;
   double gear_ratio_;
 
-  RoboteqInterface front_left, front_right, rear_left, rear_right;
+  struct {
+    boost::shared_ptr<RoboteqInterface> front_left, front_right, rear_left, rear_right;
+  } motors;
 };
 
 /**
@@ -122,10 +133,11 @@ protected:
  */
 void MotorFanout::driveCallback(const grizzly_msgs::DriveConstPtr& drive)
 {
-  front_left.cmdVelocity(drive->front_left * gear_ratio_);
-  front_right.cmdVelocity(drive->front_right * gear_ratio_);
-  rear_left.cmdVelocity(drive->rear_left * gear_ratio_);
-  rear_right.cmdVelocity(drive->rear_right * gear_ratio_);
+  //ROS_INFO("%f %f %f %f", drive->front_left,drive->front_right,drive->rear_left,drive->rear_right);
+  motors.front_left->cmdVelocity(drive->front_left * gear_ratio_);
+  motors.front_right->cmdVelocity(drive->front_right * gear_ratio_);
+  motors.rear_left->cmdVelocity(drive->rear_left * gear_ratio_);
+  motors.rear_right->cmdVelocity(drive->rear_right * gear_ratio_);
 }
 
 /**
@@ -139,10 +151,10 @@ void MotorFanout::encodersPublishCallback(const ros::TimerEvent& timer_event)
   encoders.header.stamp = ros::Time::now();
   try
   {
-    encoders.front_left = front_left.getMeasuredVelocity() / gear_ratio_;
-    encoders.front_right = front_right.getMeasuredVelocity() / gear_ratio_;
-    encoders.rear_left = rear_left.getMeasuredVelocity() / gear_ratio_;
-    encoders.rear_right = rear_right.getMeasuredVelocity() / gear_ratio_;
+    encoders.front_left = motors.front_left->getMeasuredVelocity() / gear_ratio_;
+    encoders.front_right = motors.front_right->getMeasuredVelocity() / gear_ratio_;
+    encoders.rear_left = motors.rear_left->getMeasuredVelocity() / gear_ratio_;
+    encoders.rear_right = motors.rear_right->getMeasuredVelocity() / gear_ratio_;
     pub_encoders_.publish(encoders);
   }
   catch (DataTimeout)
@@ -156,13 +168,8 @@ void MotorFanout::encodersPublishCallback(const ros::TimerEvent& timer_event)
  */
 int main (int argc, char ** argv)
 {
-  ros::init(argc, argv, "grizzly_motor_fanout"); 
-
-  double gear_ratio(50.0), telemetry_timeout(0.03), telemetry_period(0.02);
-  ros::param::param<double>("~gear_ratio", gear_ratio, gear_ratio);
-  ros::param::param<double>("~telemetry_timeout", telemetry_timeout, telemetry_timeout);
-  ros::param::param<double>("~telemetry_period", telemetry_period, telemetry_period);
+  ros::init(argc, argv, "~"); 
   
-  MotorFanout mf(gear_ratio, ros::Duration(telemetry_period), ros::Duration(telemetry_timeout));
+  MotorFanout mf;
   ros::spin();
 }

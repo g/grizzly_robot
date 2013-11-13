@@ -1,0 +1,27 @@
+<launch>
+  <group ns="motors">
+    <rosparam>
+      front_right:
+        port: /dev/roboteq/front-right
+        baud: 115200
+      front_left:
+        port: /dev/roboteq/front-left
+        baud: 115200
+      rear_right:
+        port: /dev/roboteq/rear-right
+        baud: 115200
+      rear_left:
+        port: /dev/roboteq/rear-left
+        baud: 115200
+    </rosparam>
+    <node pkg="roboteq_driver" type="driver_node" name="front_right" />
+    <node pkg="roboteq_driver" type="driver_node" name="front_left" />
+    <node pkg="roboteq_driver" type="driver_node" name="rear_right" />
+    <node pkg="roboteq_driver" type="driver_node" name="rear_left" />
+  </group>
+
+  <!-- Provide singular safe_cmd_drive/encoders interface to the drivers. -->
+  <node pkg="grizzly_base" type="motor_fanout" name="grizzly_motor_fanout">
+    <remap from="cmd_drive" to="safe_cmd_drive" />
+  </node>
+</launch>
