@@ -134,9 +134,9 @@ void MotorFanout::driveCallback(const grizzly_msgs::DriveConstPtr& drive)
 {
   //ROS_INFO("%f %f %f %f", drive->front_left,drive->front_right,drive->rear_left,drive->rear_right);
   motors.front_left->cmdVelocity(drive->front_left * gear_ratio_);
-  motors.front_right->cmdVelocity(drive->front_right * gear_ratio_);
+  motors.front_right->cmdVelocity(drive->front_right * -gear_ratio_);
   motors.rear_left->cmdVelocity(drive->rear_left * gear_ratio_);
-  motors.rear_right->cmdVelocity(drive->rear_right * gear_ratio_);
+  motors.rear_right->cmdVelocity(drive->rear_right * -gear_ratio_);
 }
 
 /**
@@ -151,9 +151,9 @@ void MotorFanout::encodersPublishCallback(const ros::TimerEvent& timer_event)
   try
   {
     encoders.front_left = motors.front_left->getMeasuredVelocity() / gear_ratio_;
-    encoders.front_right = motors.front_right->getMeasuredVelocity() / gear_ratio_;
+    encoders.front_right = motors.front_right->getMeasuredVelocity() / -gear_ratio_;
     encoders.rear_left = motors.rear_left->getMeasuredVelocity() / gear_ratio_;
-    encoders.rear_right = motors.rear_right->getMeasuredVelocity() / gear_ratio_;
+    encoders.rear_right = motors.rear_right->getMeasuredVelocity() / -gear_ratio_;
     pub_encoders_.publish(encoders);
   }
   catch (DataTimeout)
