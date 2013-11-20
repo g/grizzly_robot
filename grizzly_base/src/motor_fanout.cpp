@@ -102,7 +102,7 @@ public:
     ros::Duration telemetry_period(telemetry_period_secs); 
     sub_drive_ = nh_.subscribe("cmd_drive", 1, &MotorFanout::driveCallback, this);
     encoder_timer_ = nh_.createTimer(telemetry_period, &MotorFanout::encodersPublishCallback, this);
-    pub_encoders_ = nh_.advertise<grizzly_msgs::Drive>("encoders", 1);
+    pub_encoders_ = nh_.advertise<grizzly_msgs::Drive>("motors/encoders", 1);
 
     ros::Duration telemetry_timeout(telemetry_timeout_secs); 
     motors.front_left.reset(new RoboteqInterface("motors/front_left", telemetry_timeout));
