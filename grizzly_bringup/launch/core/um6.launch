@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="um6" type="um6_driver" name="um6_driver">
+    <param name="port" type="string" value="$(optenv GRIZZLY_IMU_PORT /dev/clearpath/imu)"/>
+    <param name="mag_updates" type="bool" value="false"/>
+  </node>
+</launch>
