@@ -15,5 +15,9 @@
     <node pkg="grizzly_base" type="mcu_diagnostics" name="grizzly_mcu_diagnostics" />
     <node pkg="grizzly_base" type="mcu_body_temp_interpreter" name="grizzly_mcu_body_temp" />
   </group>
+
+  <node pkg="grizzly_base" type="energy_estimator" name="grizzly_energy_estimator">
+    <param name="battery_string_count" value="$(optenv GRIZZLY_BATTERY_STRINGS 2)" />
+  </node>
 </launch>
 
