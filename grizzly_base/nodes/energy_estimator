@@ -50,10 +50,12 @@ class EnergyEstimation:
         rospy.Subscriber('mcu/status', RawStatus, self.HandleUserStatus)
         rospy.Subscriber('motors/front_left/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, FL))
         rospy.Subscriber('motors/front_right/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, FR))
-        rospy.Subscriber('motors/rear_left/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, RL)))
+        rospy.Subscriber('motors/rear_left/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, RL))
         rospy.Subscriber('motors/rear_right/feedback', Feedback, partial(self.HandleMotorVoltageCurrent, RR))
 
         while (not self.process_first_voltage() and (not rospy.is_shutdown())):
+            print self.first_motor_volt_rxd
+            print self.first_user_volt_rxd #get first estimate of SOC from voltages
             self.rate.sleep()
 
         total_wattage = Float32()
@@ -64,7 +66,7 @@ class EnergyEstimation:
             self.rate.sleep()
 
     # get current and voltage (power), integrate over time to get Watt.hours
-    def HandleUserStatus(self,data):
+    def HandleUserStatus(self, data):
         if (not self.first_user_volt_rxd):
             self.first_user_volt_rxd = True
             self.first_user_volt = data.voltage
@@ -80,7 +82,7 @@ class EnergyEstimation:
             self.last_user_watt = curr_w
             self.last_user_time = curr_t
 
-    def HandleMotorVoltageCurrent(self,motor_num,data):
+    def HandleMotorVoltageCurrent(self, motor_num, data):
         if (not self.first_motor_volt_rxd[motor_num]):
             self.first_motor_volt_rxd[motor_num] = True
             self.first_motor_volts[motor_num] = data.supply_voltage
