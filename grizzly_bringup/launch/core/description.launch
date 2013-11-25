@@ -1,0 +1,5 @@
+<launch>
+  <arg name="urdf_filename" default="$(env ROBOT_URDF_FILENAME)" />
+  <param name="robot_description" textfile="$(arg urdf_filename)" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+</launch>

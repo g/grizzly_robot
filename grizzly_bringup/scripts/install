@@ -1,70 +1,24 @@
 #!/bin/bash
+source `rospack find rosbash`/rosbash
 
-# Run this as root, from the directory containing it!
-#
-# USAGE: sudo ./install.bash
-#
-
-if [ "$(id -u)" != "0" ]; then
-    echo "Re-executing self as root."
-    sudo $0
-    exit 0
-fi
-
-robot=grizzly
-user=administrator
-release=$(ls /opt/ros/ | tail -n1)
-
-mkdir -p /etc/ros
-rm -rf /etc/ros/setup.bash
-ln -s /home/${user}/ros/setup.bash /etc/ros/setup.bash
-source /etc/ros/setup.bash
-pushd `rospack find ${robot}_bringup` > /dev/null
-
-echo "Install udev rules and helper scripts."
-cp udev/* /etc/udev/rules.d/
-cp scripts/clearpath-name /usr/sbin/
-cp scripts/core /usr/sbin/
-
-service udev restart
-
-function do_subs {
-  # source file, dest file, interface, robot, job, release
-  cp $1 $2
-  sed -i "s/interface0/$3/g" $2
-  sed -i "s/portnum/$4/g" $2
-  sed -i "s/robot/$5/g" $2
-  sed -i "s/job/$6/g" $2
-  sed -i "s/release/$7/g" $2 
-  sed -i "s/user/$8/g" $2 
-}
-
-function install_job {
-  job=$1
-  interface=$2
-  portnum=$3
-
-  echo "Installing $robot-$job using network interface $interface, port $portnum."
-  
-  cp scripts/mklaunch /usr/sbin/mklaunch
-  do_subs upstart/start /usr/sbin/$robot-$job-start $interface $portnum $robot $job $release $user
-  chmod +x /usr/sbin/$robot-$job-start
-
-  do_subs upstart/stop /usr/sbin/$robot-$job-stop $interface $portnum $robot $job $release $user
-  chmod +x /usr/sbin/$robot-$job-stop
-
-  do_subs upstart/job.conf /etc/init/$robot-$job.conf $interface $portnum $robot $job $release $user
-
-  # Copy launch files into /etc/ros/
-  launch_path=/etc/ros/$release/$robot/$job.d
-  mkdir -p $launch_path 
-  cp `rospack find ${robot}_bringup`/launch/$job/* $launch_path
-}
-
-# substitutions: interface0, robot, job, release
-#install_job core br0 11310
-#install_job core eth1 11311
-install_job core eth0 11311
-#install_job interface wlan0 11311
-
+# Install the udev rules.
+rospd grizzly_bringup/udev > /dev/null
+echo "Installing udev rules."
+sudo cp *.rules /etc/udev/rules.d/
 popd > /dev/null
+sudo udevadm trigger
+
+# Install the upstart job, populate it with launch files.
+#  * For the network interface, first try script parameter $1, then ROBOT_NETWORK, then eth0.
+#  * For the setup.bash to use, first try ROBOT_SETUP, then fall back on setup.bash from active workspace.
+#    In CPR-configured Ubuntu machines, /etc/ros/setup.bash is a wrapper on /opt/ros/xxx/setup.bash, and sets the
+#    ROBOT_SETUP var to itself. This allows platform-wide env vars to be placed in that file.
+install_pkg="rosrun robot_upstart install"
+$install_pkg grizzly_bringup/launch/core \
+  --job grizzly-core \
+  --interface ${ROBOT_NETWORK-br0} \
+  --setup ${ROBOT_SETUP-$(roscd; echo `pwd`/setup.bash)}
+$install_pkg grizzly_base/launch --job grizzly-core --augment
+$install_pkg grizzly_motion/launch --job grizzly-core --augment
+$install_pkg grizzly_teleop/launch/ps3nav_teleop.launch --job grizzly-core --augment
+$install_pkg grizzly_description/urdf/base.urdf.xacro --job grizzly-core --augment
