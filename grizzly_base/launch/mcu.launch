@@ -2,7 +2,12 @@
   <group ns="mcu">
     <!-- Serial connection to MCU -->
     <node pkg="rosserial_server" type="serial_node" name="grizzly_rosserial_server" respawn="true">
-      <param name="port" value="/dev/arduino" />
+      <rosparam>
+        port: /dev/arduino
+        require:
+          publishers: [ status ]
+          subscribers: [ ambience, energy, estop, fan ]
+      </rosparam>
     </node>
     <node pkg="rosserial_python" type="message_info_service.py" name="grizzly_rosserial_message_info" />
 
