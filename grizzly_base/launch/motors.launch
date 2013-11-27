@@ -18,10 +18,10 @@
     <node pkg="roboteq_driver" type="driver_node" name="front_right" />
     <node pkg="roboteq_driver" type="driver_node" name="rear_left" />
     <node pkg="roboteq_driver" type="driver_node" name="rear_right" />
-    <node pkg="roboteq_diagnostics" type="diagnostics_publisher" name="roboteq_diagnostics" ns="front_left" />
-    <node pkg="roboteq_diagnostics" type="diagnostics_publisher" name="roboteq_diagnostics" ns="front_right" />
-    <node pkg="roboteq_diagnostics" type="diagnostics_publisher" name="roboteq_diagnostics" ns="rear_left" />
-    <node pkg="roboteq_diagnostics" type="diagnostics_publisher" name="roboteq_diagnostics" ns="rear_right" />
+    <node pkg="roboteq_diagnostics" type="diagnostic_publisher" name="roboteq_diagnostics" ns="front_left" />
+    <node pkg="roboteq_diagnostics" type="diagnostic_publisher" name="roboteq_diagnostics" ns="front_right" />
+    <node pkg="roboteq_diagnostics" type="diagnostic_publisher" name="roboteq_diagnostics" ns="rear_left" />
+    <node pkg="roboteq_diagnostics" type="diagnostic_publisher" name="roboteq_diagnostics" ns="rear_right" />
   </group>
 
   <!-- Provide singular safe_cmd_drive/encoders interface to the drivers. -->

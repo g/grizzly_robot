@@ -76,11 +76,11 @@ class Diagnostics(object):
             self.status_faults.level = DiagnosticStatus.OK
             if error != 0:
                 if error & RawStatus.ERROR_ESTOP:
-                    self.status_faults.message = "System e-stop loop is open."
+                    self.status_faults.message = "System is in e-stop."
                 elif error & RawStatus.ERROR_ESTOP_RESET:
                     self.status_faults.message = "System requires e-stop reset."
                 elif error & RawStatus.ERROR_BRK_DET:
-                    self.status_faults.message = "System precharging."
+                    self.status_faults.message = "System is precharging."
                 else: 
                     self.status_faults.message = "System fault; please see details."
                 self.status_faults.level = DiagnosticStatus.ERROR
