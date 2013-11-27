@@ -3,7 +3,8 @@
 import rospy
 
 from std_msgs.msg import Bool, Float32
-from roboteq_msgs.msg import Status
+from roboteq_msgs.msg import Feedback
+from functools import partial
 
 FR = 0
 FL = 1
@@ -16,29 +17,26 @@ class FanControl:
         
         self.safe_motor_temp = rospy.get_param('safe_motor_temp', 60)
         self.safe_ch_temp = rospy.get_param('safe_ch_temp', 50)
-        self.safe_ic_temp = rospy.get_param('safe_ic_temp', 50)
         self.safe_body_temp = rospy.get_param('safe_body_temp', 50)
         self.hyst_size = rospy.get_param('hyst_size', 10)
 
         self.fan_state = False
 
         self.body_temp = 0
-        self.channel1_temp = [0,0,0,0]
-        self.channel2_temp = [0,0,0,0]
-        self.ic_temp = [0,0,0,0]
+        self.channel_temp = [0,0,0,0]
         self.motor_temp = [0,0,0,0]
 
         # Timing
-        hz = rospy.get_param('~hz',50)
-        self.rate = rospy.Rate(hz))
+        hz = rospy.get_param('~hz', 20)
+        self.rate = rospy.Rate(hz)
 
         # Publishers & subscribers
         self.cmd_fan = rospy.Publisher('mcu/fan', Bool)
         rospy.Subscriber('mcu/body_temp', Float32, self.HandleBodyTempStatus)
-        rospy.Subscriber('motors/front_left/status', Status, partial(HandleMotorStatus, FL))
-        rospy.Subscriber('motors/front_right/status', Status, partial(HandleMotorStatus, FR))
-        rospy.Subscriber('motors/rear_left/status', Status, partial(HandleMotorStatus, RL))
-        rospy.Subscriber('motors/rear_right/status', Status, partial(HandleMotorStatus, RR))
+        rospy.Subscriber('motors/front_left/feedback', Feedback, partial(self.HandleMotorFeedback, FL))
+        rospy.Subscriber('motors/front_right/feedback', Feedback, partial(self.HandleMotorFeedback, FR))
+        rospy.Subscriber('motors/rear_left/feedback', Feedback, partial(self.HandleMotorFeedback, RL))
+        rospy.Subscriber('motors/rear_right/feedback', Feedback, partial(self.HandleMotorFeedback, RR))
 
         while not rospy.is_shutdown():
             """ Main state machine loop """
@@ -49,11 +47,9 @@ class FanControl:
     def HandleBodyTempStatus(self, data):
         self.body_temp = data.data
 
-    def HandleMotorStatus(self, motor_num, data):
-        self.motor_temp[motor_num] = data.motor_temperature[0]
-        self.channel1_temp[motor_num]  = data.channel_temperature[0]
-        self.channel2_temp[motor_num] = data.channel_temperature[1]
-        self.ic_temp[motor_num] = data.ic_temperature
+    def HandleMotorFeedback(self, motor_num, data):
+        self.motor_temp[motor_num] = data.motor_temperature
+        self.channel_temp[motor_num]  = data.channel_temperature
         
     def check_temps(self):
         motor_safe = ic_safe = ch_safe = body_safe = 0
@@ -65,11 +61,7 @@ class FanControl:
                self.fan_state = True
                break
            
-            if (self.ic_temp[i] > self.safe_ic_temp ):
-               self.fan_state = True
-               break
-
-            if (self.channel1_temp[i] > self.safe_ch_temp ):
+            if (self.channel_temp[i] > self.safe_ch_temp ):
                self.fan_state = True
                break
 
@@ -77,10 +69,7 @@ class FanControl:
             if (self.motor_temp[i] < (self.safe_motor_temp - self.hyst_size)):
                 motor_safe = motor_safe + 1 
 
-            if (self.ic_temp[i] < (self.safe_ic_temp - self.hyst_size)):
-                ic_safe = ic_safe + 1
-
-            if (self.channel1_temp[i] < (self.safe_ch_temp - self.hyst_size)):
+            if (self.channel_temp[i] < (self.safe_ch_temp - self.hyst_size)):
                 ch_safe = ch_safe + 1  
         
         # Body temperature check
