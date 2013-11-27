@@ -1,4 +1,4 @@
-SUBSYSTEM=="tty", ACTION=="add", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6011", GOTO="do_roboteq"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6011", GOTO="do_roboteq"
 GOTO="skip_roboteq"
 
 LABEL="do_roboteq"
