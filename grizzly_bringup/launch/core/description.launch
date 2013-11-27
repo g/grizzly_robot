@@ -1,5 +1,8 @@
 <launch>
   <arg name="urdf_filename" default="$(env ROBOT_URDF_FILENAME)" />
   <param name="robot_description" textfile="$(arg urdf_filename)" />
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="20.0" />
+  </node>
+  <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" />
 </launch>
