@@ -19,5 +19,12 @@
   <node pkg="grizzly_base" type="energy_estimator" name="grizzly_energy_estimator">
     <param name="battery_string_count" value="$(optenv GRIZZLY_BATTERY_STRINGS 2)" />
   </node>
+
+  <node pkg="grizzly_base" type="fan_control" name="grizzly_fan_control">
+    <param name="safe_motor_temp" value="60"/>
+    <param name="safe_ch_temp" value="50"/>
+    <param name="safe_ic_temp" value="50"/> 
+    <param name="hyst_size" value="10"/> 
+  </node>
 </launch>
 
