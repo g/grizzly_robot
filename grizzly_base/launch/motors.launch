@@ -26,6 +26,7 @@
 
   <!-- Provide singular safe_cmd_drive/encoders interface to the drivers. -->
   <node pkg="grizzly_base" type="motor_fanout" name="grizzly_motor_fanout">
+    <param name="gear_ratio" value="$(optenv GRIZZLY_GEAR_RATIO 50)" />
     <remap from="cmd_drive" to="safe_cmd_drive" />
   </node>
 </launch>
