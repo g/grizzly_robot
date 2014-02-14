@@ -2,7 +2,7 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2014-02-14)
+------------------
 * Initial release for Hydro
 * Contributors: Mike Purvis
