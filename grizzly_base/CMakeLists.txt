@@ -8,3 +8,6 @@ include_directories(${catkin_INCLUDES})
 
 add_subdirectory(src)
 add_subdirectory(nodes)
+
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
