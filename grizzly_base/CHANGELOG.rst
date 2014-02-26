@@ -2,8 +2,8 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2014-02-25)
+------------------
 * Add missing roboteq dependencies
 * Installation of grizzly_base launchers.
 * Contributors: Mike Purvis

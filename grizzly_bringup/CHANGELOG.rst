@@ -2,8 +2,8 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2014-02-25)
+------------------
 * Add robot_pose_ekf as dependency
 * Add diagnostic_aggregator and enu dependencies
 * Add description and teleop
