@@ -1,13 +1,6 @@
 #!/bin/bash
 source `rospack find rosbash`/rosbash
 
-# Install the udev rules.
-rospd grizzly_bringup/udev > /dev/null
-echo "Installing udev rules."
-sudo cp *.rules /etc/udev/rules.d/
-popd > /dev/null
-sudo udevadm trigger
-
 # Install the upstart job, populate it with launch files.
 #  * For the network interface, first try script parameter $1, then ROBOT_NETWORK, then eth0.
 #  * For the setup.bash to use, first try ROBOT_SETUP, then fall back on setup.bash from active workspace.

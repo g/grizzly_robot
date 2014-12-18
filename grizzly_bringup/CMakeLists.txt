@@ -5,7 +5,7 @@ find_package(catkin)
 
 catkin_package()
 
-install(DIRECTORY launch config udev
+install(DIRECTORY launch config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 install(PROGRAMS scripts/install
