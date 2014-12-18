@@ -16,14 +16,6 @@ $install_pkg grizzly_motion/launch --job grizzly-core --augment
 $install_pkg grizzly_teleop/launch/ps3nav_teleop.launch --job grizzly-core --augment
 $install_pkg grizzly_description/urdf/base.urdf.xacro --job grizzly-core --augment
 
-EKF_SETTINGS_YAML=/etc/ros/$ROS_DISTRO/grizzly_ekf.yaml
-if [ -e "$EKF_SETTINGS_YAML" ]; then
-  echo "EKF settings yaml config already exists, skipping."
-else 
-  echo "Installing default EKF settings file to $EKF_SETTINGS_YAML"
-  sudo cp "$(catkin_find grizzly_bringup config/grizzly_ekf.yaml)" "$EKF_SETTINGS_YAML"
-fi
-
 if [[ -n "$ROBOT_EXTRAS_PACKAGE" ]]; then
   echo "Installing extras specific to this robot from the $ROBOT_EXTRAS_PACKAGE package."
   rosrun "$ROBOT_EXTRAS_PACKAGE" install
