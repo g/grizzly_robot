@@ -14,6 +14,7 @@ $install_pkg grizzly_bringup/launch/core \
 $install_pkg grizzly_base/launch --job grizzly-core --augment
 $install_pkg grizzly_motion/launch --job grizzly-core --augment
 $install_pkg grizzly_teleop/launch/ps3nav_teleop.launch --job grizzly-core --augment
+$install_pkg grizzly_navigation/launch --job grizzly-core --augment
 $install_pkg grizzly_description/urdf/base.urdf.xacro --job grizzly-core --augment
 
 if [[ -n "$ROBOT_EXTRAS_PACKAGE" ]]; then
