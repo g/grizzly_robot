@@ -43,5 +43,5 @@ if [ -e "$COMPASS_YAML" ]; then
   echo "Compass yaml config already exists, skipping."
 else 
   echo "Installing compass yaml file to $COMPASS_YAML"
-  sudo cp "$(rospack find husky_bringup)/config/imu_compass.yaml" "$COMPASS_YAML"
+  sudo cp "$(rospack find grizzly_bringup)/config/imu_compass.yaml" "$COMPASS_YAML"
 fi
