@@ -2,8 +2,8 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2015-01-09)
+------------------
 * Add queue_size to rospy.Publisher.
 * Fix catkin includes typo.
 * Contributors: Mike Purvis

@@ -2,8 +2,8 @@
 Changelog for package grizzly_robot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2015-01-09)
+------------------
 * Depend on grizzly_firmware metapackage instead of grizzly_avr directly.
 * Contributors: Mike Purvis
 
