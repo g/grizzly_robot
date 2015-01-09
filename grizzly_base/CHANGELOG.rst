@@ -2,6 +2,12 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add queue_size to rospy.Publisher.
+* Fix catkin includes typo.
+* Contributors: Mike Purvis
+
 0.1.1 (2014-02-25)
 ------------------
 * Add missing roboteq dependencies
