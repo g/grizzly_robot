@@ -16,7 +16,7 @@ class ADCInterpreter(object):
         rospy.init_node('temp_adc_interpreter')
 
         rospy.Subscriber('status', RawStatus, self.translate_adc)
-        self.temp_pub = rospy.Publisher('body_temp',Float32);
+        self.temp_pub = rospy.Publisher('body_temp', Float32, queue_size=1);
         
 
     def translate_adc(self,data):

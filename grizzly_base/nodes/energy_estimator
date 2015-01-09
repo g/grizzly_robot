@@ -23,7 +23,7 @@ class EnergyEstimation:
         self.battery_string_count = rospy.get_param('battery_string_count', 2)
         
         # Publishers & subscribers
-        self.energy_pub = rospy.Publisher('mcu/energy', Float32)
+        self.energy_pub = rospy.Publisher('mcu/energy', Float32, queue_size=1)
 
         self.first_motor_volt_rxd = [False, False, False, False]
         self.first_user_volt_rxd = False

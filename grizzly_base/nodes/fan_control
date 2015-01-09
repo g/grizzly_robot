@@ -31,7 +31,7 @@ class FanControl:
         self.rate = rospy.Rate(hz)
 
         # Publishers & subscribers
-        self.cmd_fan = rospy.Publisher('mcu/fan', Bool)
+        self.cmd_fan = rospy.Publisher('mcu/fan', Bool, queue_size=1)
         rospy.Subscriber('mcu/body_temp', Float32, self.HandleBodyTempStatus)
         rospy.Subscriber('motors/front_left/feedback', Feedback, partial(self.HandleMotorFeedback, FL))
         rospy.Subscriber('motors/front_right/feedback', Feedback, partial(self.HandleMotorFeedback, FR))

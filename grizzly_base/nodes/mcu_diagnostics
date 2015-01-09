@@ -11,7 +11,7 @@ class Diagnostics(object):
     def __init__(self):
         rospy.init_node('grizzly_diagnostics')
 
-        self.pub = rospy.Publisher('/diagnostics', DiagnosticArray)
+        self.pub = rospy.Publisher('/diagnostics', DiagnosticArray, queue_size=1)
         self.rate = rospy.Rate(rospy.get_param('~hz', 1))
 
         tmpl = "mcu: %s"
