@@ -9,18 +9,16 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <run_depend>diagnostic_aggregator</run_depend>
-  <run_depend>enu</run_depend>
-  <run_depend>robot_pose_ekf</run_depend>
-  <run_depend>robot_upstart</run_depend>
-  <run_depend>rospy</run_depend>
   <run_depend>grizzly_base</run_depend>
   <run_depend>grizzly_description</run_depend>
   <run_depend>grizzly_motion</run_depend>
+  <run_depend>grizzly_navigation</run_depend>
   <run_depend>grizzly_teleop</run_depend>
   <run_depend>nmea_comms</run_depend>
   <run_depend>nmea_navsat_driver</run_depend>
   <run_depend>roboteq_driver</run_depend>
   <run_depend>robot_upstart</run_depend>
+  <run_depend>rospy</run_depend>
   <run_depend>rosserial_server</run_depend>
   <run_depend>rosserial_python</run_depend>
   <run_depend>um6</run_depend>

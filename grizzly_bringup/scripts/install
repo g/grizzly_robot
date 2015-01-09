@@ -1,23 +1,25 @@
-#!/bin/bash
-source `rospack find rosbash`/rosbash
+#!/usr/bin/env python
 
-# Install the upstart job, populate it with launch files.
-#  * For the network interface, first try script parameter $1, then ROBOT_NETWORK, then eth0.
-#  * For the setup.bash to use, first try ROBOT_SETUP, then fall back on setup.bash from active workspace.
-#    In CPR-configured Ubuntu machines, /etc/ros/setup.bash is a wrapper on /opt/ros/xxx/setup.bash, and sets the
-#    ROBOT_SETUP var to itself. This allows platform-wide env vars to be placed in that file.
-install_pkg="rosrun robot_upstart install"
-$install_pkg grizzly_bringup/launch/core \
-  --job grizzly-core \
-  --interface ${ROBOT_NETWORK-br0} \
-  --setup ${ROBOT_SETUP-$(roscd; echo `pwd`/setup.bash)}
-$install_pkg grizzly_base/launch --job grizzly-core --augment
-$install_pkg grizzly_motion/launch --job grizzly-core --augment
-$install_pkg grizzly_teleop/launch/ps3nav_teleop.launch --job grizzly-core --augment
-$install_pkg grizzly_navigation/launch --job grizzly-core --augment
-$install_pkg grizzly_description/urdf/base.urdf.xacro --job grizzly-core --augment
+import robot_upstart
+import os
 
+j = robot_upstart.Job(workspace_setup=os.environ['ROBOT_SETUP'])
+
+# Stuff to launch on system startup.
+j.add(package="grizzly_bringup", glob="launch/core/*")
+j.add(package="grizzly_base", glob="launch/*")
+j.add(package="grizzly_motion", glob="launch/*")
+j.add(package="grizzly_navigation", glob="launch/*")
+j.add(package="grizzly_teleop", filename="launch/ps3nav_teleop.launch")
+
+# Glob URDF on startup also (experimental)
+j.add(package="grizzly_description", filename="urdf/base.urdf.xacro")
+
+j.install()
+
+"""
 if [[ -n "$ROBOT_EXTRAS_PACKAGE" ]]; then
   echo "Installing extras specific to this robot from the $ROBOT_EXTRAS_PACKAGE package."
   rosrun "$ROBOT_EXTRAS_PACKAGE" install
 fi
+"""
