@@ -49,6 +49,9 @@ public:
   {
     sub_feedback_ = nh_.subscribe("feedback", 1, &RoboteqInterface::feedbackCallback, this);
     pub_cmd_ = nh_.advertise<roboteq_msgs::Command>("cmd", 1);
+
+    brake_timeout_timer_ = nh_.createTimer(ros::Duration(0.11), &RoboteqInterface::brakeTimeoutCallback, this);
+    brake_timeout_timer_.stop();
     is_braking_ = false;
     brake_setpoint_ = 0;
   }
@@ -64,6 +67,10 @@ public:
 
   void cmdBrake()
   {
+    // Reset braking timeout.
+    brake_timeout_timer_.stop();
+    brake_timeout_timer_.start();
+
     // On the first brake command, we store the current position in order to hold to it.
     // On successive brake commands, we re-issue the command to hold to the previously-stored
     // position.
@@ -114,6 +121,13 @@ public:
   }
 
 protected:
+  void brakeTimeoutCallback(const ros::TimerEvent&)
+  {
+    // No longer braking, so if the brake is re-asserted again, a new brake position
+    // for the wheels will be sampled and asserted.
+    is_braking_ = false;
+  }
+
   void feedbackCallback(const roboteq_msgs::FeedbackConstPtr& feedback)
   {
     last_feedback_ = feedback;
@@ -125,7 +139,22 @@ protected:
   ros::Publisher pub_cmd_;
   ros::Duration telemetry_timeout_;
 
+  /**
+   * Determines when the brake is no longer being asserted, so that the brake setpoint
+   * can be cleared and re-established.
+   */
+  ros::Timer brake_timeout_timer_;
+
+  /**
+   * Records whether vehicle is currently in active braking. When braking is
+   * starting, the brake setpoint is sampled from the current state of the
+   * motor. Otherwise, it is simply asserted.
+   */
   bool is_braking_;
+
+  /**
+   * Records position setpoint of vehicle when braking was begun.
+   */
   float brake_setpoint_;
 };
 
@@ -161,8 +190,17 @@ protected:
 
   ros::NodeHandle nh_;
   ros::Subscriber sub_drive_;
+
+  /**
+   * Governs publish rate of encoder status messages, which are coalated together from
+   * the four individual drivers.
+   */
   ros::Timer encoder_timer_;
   ros::Publisher pub_encoders_;
+
+  /**
+   * Factor between reported motor speed and actual post gearbox wheel speed.
+   */
   double gear_ratio_;
 
   struct {
