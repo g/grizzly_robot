@@ -2,16 +2,20 @@
   <group ns="motors">
     <rosparam>
       front_right:
-        port: /dev/roboteq/front-right
+        # port: /dev/roboteq/front-right
+        port: /dev/clearpath/grizzly_fr
         baud: 115200
       front_left:
-        port: /dev/roboteq/front-left
+        # port: /dev/roboteq/front-left
+        port: /dev/clearpath/grizzly_fl
         baud: 115200
       rear_right:
-        port: /dev/roboteq/rear-right
+        # port: /dev/roboteq/rear-right
+        port: /dev/clearpath/grizzly_rr
         baud: 115200
       rear_left:
-        port: /dev/roboteq/rear-left
+        # port: /dev/roboteq/rear-left
+        port: /dev/clearpath/grizzly_rl
         baud: 115200
     </rosparam>
     <node pkg="roboteq_driver" type="driver_node" name="front_left" />

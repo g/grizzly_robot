@@ -3,7 +3,8 @@
     <!-- Serial connection to MCU -->
     <node pkg="rosserial_server" type="serial_node" name="grizzly_rosserial_server" respawn="true">
       <rosparam>
-        port: /dev/arduino
+        # port: /dev/arduino
+        port: /dev/clearpath/grizzly_mcu
         require:
           publishers: [ status ]
           subscribers: [ ambience, energy, estop, fan ]
