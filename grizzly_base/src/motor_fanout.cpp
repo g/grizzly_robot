@@ -9,7 +9,7 @@ Redistribution and use in source and binary forms, with or without modification,
 the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the
    following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
    following disclaimer in the documentation and/or other materials provided with the distribution.
  * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
    products derived from this software without specific prior written permission.
@@ -45,35 +45,89 @@ class RoboteqInterface
 public:
   RoboteqInterface(std::string ns, ros::Duration telemetry_timeout) :
     nh_(ns),
-    telemetry_timeout_(telemetry_timeout),
-    // sub_status_(nh_.subscribe("status", 1, &RoboteqInterface::status_callback, this)),
-    sub_feedback_(nh_.subscribe("feedback", 1, &RoboteqInterface::feedbackCallback, this)),
-    pub_cmd_(nh_.advertise<roboteq_msgs::Command>("cmd", 1))
+    telemetry_timeout_(telemetry_timeout)
   {
+    sub_feedback_ = nh_.subscribe("feedback", 1, &RoboteqInterface::feedbackCallback, this);
+    pub_cmd_ = nh_.advertise<roboteq_msgs::Command>("cmd", 1);
+
+    brake_timeout_timer_ = nh_.createTimer(ros::Duration(0.11), &RoboteqInterface::brakeTimeoutCallback, this);
+    brake_timeout_timer_.stop();
+    is_braking_ = false;
+    brake_setpoint_ = 0;
   }
 
   void cmdVelocity(float vel)
   {
+    is_braking_ = false;
     roboteq_msgs::Command cmd;
-    cmd.commanded_velocity = vel; 
+    cmd.mode = roboteq_msgs::Command::MODE_VELOCITY;
+    cmd.setpoint = vel;
     pub_cmd_.publish(cmd);
   }
 
-  float getMeasuredVelocity()
+  void cmdBrake()
+  {
+    // Reset braking timeout.
+    brake_timeout_timer_.stop();
+    brake_timeout_timer_.start();
+
+    // On the first brake command, we store the current position in order to hold to it.
+    // On successive brake commands, we re-issue the command to hold to the previously-stored
+    // position.
+    if  (!is_braking_)
+    {
+      if (lastFeedbackValid())
+      {
+        brake_setpoint_ = last_feedback_->measured_position;
+        is_braking_ = true;
+      }
+      else
+      {
+        ROS_WARN("Unable to command braking position hold due to lack of up-to-date telemetry.");
+        return;
+      }
+    }
+
+    roboteq_msgs::Command cmd;
+    cmd.mode = roboteq_msgs::Command::MODE_POSITION;
+    cmd.setpoint = brake_setpoint_;
+    pub_cmd_.publish(cmd);
+  }
+
+  bool lastFeedbackValid()
   {
     if (!last_feedback_)
     {
-      throw DataTimeout();
+      return false;
     }
     ros::Duration age(ros::Time::now() - last_feedback_->header.stamp);
     if (age > telemetry_timeout_)
     {
-      throw DataTimeout(age);
+      throw false;
     }
-    return last_feedback_->measured_velocity;
+    return true;
   }
 
-protected: 
+  float getMeasuredVelocity()
+  {
+    if (lastFeedbackValid())
+    {
+      return last_feedback_->measured_velocity;
+    }
+    else
+    {
+      throw DataTimeout();
+    }
+  }
+
+protected:
+  void brakeTimeoutCallback(const ros::TimerEvent&)
+  {
+    // No longer braking, so if the brake is re-asserted again, a new brake position
+    // for the wheels will be sampled and asserted.
+    is_braking_ = false;
+  }
+
   void feedbackCallback(const roboteq_msgs::FeedbackConstPtr& feedback)
   {
     last_feedback_ = feedback;
@@ -84,6 +138,24 @@ protected:
   ros::Subscriber sub_feedback_; // , sub_status_;
   ros::Publisher pub_cmd_;
   ros::Duration telemetry_timeout_;
+
+  /**
+   * Determines when the brake is no longer being asserted, so that the brake setpoint
+   * can be cleared and re-established.
+   */
+  ros::Timer brake_timeout_timer_;
+
+  /**
+   * Records whether vehicle is currently in active braking. When braking is
+   * starting, the brake setpoint is sampled from the current state of the
+   * motor. Otherwise, it is simply asserted.
+   */
+  bool is_braking_;
+
+  /**
+   * Records position setpoint of vehicle when braking was begun.
+   */
+  float brake_setpoint_;
 };
 
 /**
@@ -92,19 +164,19 @@ class MotorFanout
 {
 public:
   MotorFanout() : nh_(""), gear_ratio_(50.0)
-  { 
+  {
     ros::param::param<double>("~gear_ratio", gear_ratio_, gear_ratio_);
 
     double telemetry_timeout_secs(0.11), telemetry_period_secs(0.05);
     ros::param::param<double>("~telemetry_timeout", telemetry_timeout_secs, telemetry_timeout_secs);
     ros::param::param<double>("~telemetry_period", telemetry_period_secs, telemetry_period_secs);
 
-    ros::Duration telemetry_period(telemetry_period_secs); 
+    ros::Duration telemetry_period(telemetry_period_secs);
     sub_drive_ = nh_.subscribe("cmd_drive", 1, &MotorFanout::driveCallback, this);
     encoder_timer_ = nh_.createTimer(telemetry_period, &MotorFanout::encodersPublishCallback, this);
     pub_encoders_ = nh_.advertise<grizzly_msgs::Drive>("motors/encoders", 1);
 
-    ros::Duration telemetry_timeout(telemetry_timeout_secs); 
+    ros::Duration telemetry_timeout(telemetry_timeout_secs);
     motors.front_left.reset(new RoboteqInterface("motors/front_left", telemetry_timeout));
     motors.front_right.reset(new RoboteqInterface("motors/front_right", telemetry_timeout));
     motors.rear_left.reset(new RoboteqInterface("motors/rear_left", telemetry_timeout));
@@ -114,11 +186,21 @@ public:
 protected:
   void encodersPublishCallback(const ros::TimerEvent& timer_event);
   void driveCallback(const grizzly_msgs::DriveConstPtr&);
+  static bool nearZero(float val);
 
   ros::NodeHandle nh_;
   ros::Subscriber sub_drive_;
+
+  /**
+   * Governs publish rate of encoder status messages, which are coalated together from
+   * the four individual drivers.
+   */
   ros::Timer encoder_timer_;
   ros::Publisher pub_encoders_;
+
+  /**
+   * Factor between reported motor speed and actual post gearbox wheel speed.
+   */
   double gear_ratio_;
 
   struct {
@@ -132,11 +214,29 @@ protected:
  */
 void MotorFanout::driveCallback(const grizzly_msgs::DriveConstPtr& drive)
 {
-  //ROS_INFO("%f %f %f %f", drive->front_left,drive->front_right,drive->rear_left,drive->rear_right);
-  motors.front_left->cmdVelocity(drive->front_left * gear_ratio_);
-  motors.front_right->cmdVelocity(drive->front_right * -gear_ratio_);
-  motors.rear_left->cmdVelocity(drive->rear_left * gear_ratio_);
-  motors.rear_right->cmdVelocity(drive->rear_right * -gear_ratio_);
+  if (nearZero(drive->front_left) && nearZero(drive->front_right) &&
+      nearZero(drive->rear_left) && nearZero(drive->rear_right))
+  {
+    ROS_DEBUG("Commanding motors to brake.");
+    motors.front_left->cmdBrake();
+    motors.front_right->cmdBrake();
+    motors.rear_left->cmdBrake();
+    motors.rear_right->cmdBrake();
+  }
+  else
+  {
+    ROS_DEBUG("Commanding motor velocities: %f %f %f %f",
+        drive->front_left, drive->front_right, drive->rear_left, drive->rear_right);
+    motors.front_left->cmdVelocity(drive->front_left * gear_ratio_);
+    motors.front_right->cmdVelocity(drive->front_right * -gear_ratio_);
+    motors.rear_left->cmdVelocity(drive->rear_left * gear_ratio_);
+    motors.rear_right->cmdVelocity(drive->rear_right * -gear_ratio_);
+  }
+}
+
+bool MotorFanout::nearZero(float val)
+{
+  return std::abs(val) < 0.0001;
 }
 
 /**
@@ -167,8 +267,8 @@ void MotorFanout::encodersPublishCallback(const ros::TimerEvent& timer_event)
  */
 int main (int argc, char ** argv)
 {
-  ros::init(argc, argv, "~"); 
-  
+  ros::init(argc, argv, "~");
+
   MotorFanout mf;
   ros::spin();
 }
