@@ -1,6 +1,6 @@
 <launch>
   <group ns="motors">
-    <rosparam>
+    <rosparam unless="$(optenv GRIZZLY_COMMS_RS232 0)">
       front_right:
         port: /dev/roboteq/front-right
         baud: 115200
@@ -12,6 +12,20 @@
         baud: 115200
       rear_left:
         port: /dev/roboteq/rear-left
+        baud: 115200
+    </rosparam>
+    <rosparam if="$(optenv GRIZZLY_COMMS_RS232 0)">
+      front_right:
+        port: /dev/clearpath/grizzly_fr
+        baud: 115200
+      front_left:
+        port: /dev/clearpath/grizzly_fl
+        baud: 115200
+      rear_right:
+        port: /dev/clearpath/grizzly_rr
+        baud: 115200
+      rear_left:
+        port: /dev/clearpath/grizzly_rl
         baud: 115200
     </rosparam>
     <node pkg="roboteq_driver" type="driver_node" name="front_left" />

@@ -2,8 +2,9 @@
   <group ns="mcu">
     <!-- Serial connection to MCU -->
     <node pkg="rosserial_server" type="serial_node" name="grizzly_rosserial_server" respawn="true">
+      <param name="port" value="/dev/arduino" unless="$(optenv GRIZZLY_COMMS_RS232 0)" />
+      <param name="port" value="/dev/clearpath/grizzly_mcu" if="$(optenv GRIZZLY_COMMS_RS232 0)" />
       <rosparam>
-        port: /dev/arduino
         require:
           publishers: [ status ]
           subscribers: [ ambience, energy, estop, fan ]
