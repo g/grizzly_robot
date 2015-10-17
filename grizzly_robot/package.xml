@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>grizzly_robot</name>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
   <description>Metapackage for Grizzly robot computers.</description>
   <maintainer email="mpurvis@clearpathrobotics.com">Mike Purvis</maintainer>
   <license>BSD</license>

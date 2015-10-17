@@ -2,8 +2,8 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2015-10-17)
+------------------
 * Launchfiles from RS232 comms option.
 * Modify MotorFanout to take advantage of active brake.
 * Contributors: Mike Purvis
