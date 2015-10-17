@@ -2,6 +2,12 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Launchfiles from RS232 comms option.
+* Modify MotorFanout to take advantage of active brake.
+* Contributors: Mike Purvis
+
 0.2.0 (2015-01-09)
 ------------------
 * Add queue_size to rospy.Publisher.
