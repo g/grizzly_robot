@@ -103,7 +103,7 @@ public:
     ros::Duration age(ros::Time::now() - last_feedback_->header.stamp);
     if (age > telemetry_timeout_)
     {
-      throw false;
+      return false;
     }
     return true;
   }
