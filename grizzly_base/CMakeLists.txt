@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(grizzly_base)
 
+# <<<<<<< HEAD
 find_package(catkin REQUIRED COMPONENTS
   controller_manager diagnostic_updater geometry_msgs hardware_interface puma_motor_driver puma_motor_msgs
   realtime_tools grizzly_msgs roscpp rosserial_server sensor_msgs std_msgs teleop_twist_joy
@@ -40,3 +41,15 @@ if (CATKIN_ENABLE_TESTING)
   roslint_cpp()
   roslint_add_test()
 endif()
+# =======
+# find_package(catkin REQUIRED COMPONENTS roscpp diagnostic_updater grizzly_msgs roboteq_msgs geometry_msgs)
+# catkin_package()
+
+# include_directories(${catkin_INCLUDE_DIRS})
+
+# add_subdirectory(src)
+# add_subdirectory(nodes)
+
+# install(DIRECTORY launch
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+# >>>>>>> master

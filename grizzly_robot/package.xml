@@ -1,24 +1,17 @@
 <?xml version="1.0"?>
 <package>
   <name>grizzly_robot</name>
-  <version>0.1.7</version>
-  <description>Metapackage of software to install on Grizzly.</description>
-
-  <author email="mpurvis@clearpathrobotics.com">Mike Purvis</author>
-  <author email="tbaltovski@clearpathrobotics.com">Tony Baltovski</author>
-
-  <maintainer email="tbaltovski@clearpathrobotics.com">Tony Baltovski</maintainer>
-
+  <version>0.2.1</version>
+  <description>Metapackage for Grizzly robot computers.</description>
+  <maintainer email="mpurvis@clearpathrobotics.com">Mike Purvis</maintainer>
   <license>BSD</license>
 
-  <url type="website">http://wiki.ros.org/Robots/Grizzly</url>
-
   <buildtool_depend>catkin</buildtool_depend>
-
+  <run_depend>grizzly_base</run_depend>
   <run_depend>grizzly_bringup</run_depend>
   <run_depend>grizzly_firmware</run_depend>
 
   <export>
-    <metapackage />
+    <metapackage/>
   </export>
 </package>

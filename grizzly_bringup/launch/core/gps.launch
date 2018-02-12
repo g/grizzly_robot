@@ -1,0 +1,12 @@
+<launch>
+  <!-- GPS serial comms -->
+  <group ns="navsat">
+    <node pkg="nmea_comms" type="serial_node" name="nmea_serial_node">
+      <param name="port" value="$(optenv GRIZZLY_NAVSAT_PORT /dev/clearpath/gps)" />
+      <param name="baud" value="$(optenv GRIZZLY_NAVSAT_BAUD 115200)" />
+    </node>
+
+    <!-- interpretation -->
+    <node pkg="nmea_navsat_driver" type="nmea_topic_driver" name="nmea_topic_driver" />
+  </group>
+</launch>

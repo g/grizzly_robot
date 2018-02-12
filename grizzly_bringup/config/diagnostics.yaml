@@ -1,0 +1,24 @@
+pub_rate: 1.0 # Optional
+base_path: '' # Optional, prepended to all diagnostic output
+analyzers:
+  motors: 
+    type: diagnostic_aggregator/GenericAnalyzer
+    path: 'Motors'
+    timeout: 5.0
+    startswith: ['front_right', 'front_left', 'rear_right', 'rear_left']
+  mcu:
+    type: diagnostic_aggregator/GenericAnalyzer
+    path: 'System'
+    timeout: 5.0
+    startswith: 'mcu'
+  input:
+    type: diagnostic_aggregator/GenericAnalyzer
+    path: 'Inputs'
+    timeout: 5.0
+    contains: 'joy'
+  system:
+    type: diagnostic_aggregator/GenericAnalyzer
+    path: 'Safety'
+    timeout: 5.0
+    startswith: 'grizzly_motion_safety'
+

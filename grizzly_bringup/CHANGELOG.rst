@@ -1,37 +1,29 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package grizzly_bringup
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.1.7 (2016-10-03)
+0.2.1 (2015-10-17)
 ------------------
 
-0.1.6 (2016-04-22)
+0.2.0 (2015-01-09)
 ------------------
-* Specified max/min angles for Hokuyo UST-10LX.
-* Added support for Hokuyo URG-10LX.
-* Contributors: Tony Baltovski
+* Update dependencies, new-style install script.
+* Add line to install launchers from grizzly_navigation.
+* Remove ekf launcher and config; this is now in grizzly_navigation.
+* Remove udev rule installation.
+* Move udev rules to debian folder.
+* Add robot_upstart dependency
+* Contributors: Mike Purvis
 
-0.1.5 (2016-03-02)
+0.1.1 (2014-02-25)
 ------------------
-* Removed br0 interface from upstart job to default to hostname.
-* Contributors: Tony Baltovski
+* Add robot_pose_ekf as dependency
+* Add diagnostic_aggregator and enu dependencies
+* Add description and teleop
+* Add robot_upstart as dependency.
+* Contributors: Mike Purvis
 
-0.1.4 (2015-12-01)
+0.1.0 (2014-02-14)
 ------------------
-* Added manufacturer to laser environment variables.
-* Installed robot_upstart install script with connman and can-udp-bridge.conf.
-* Contributors: Mike Purvis, Tony Baltovski
-
-0.1.3 (2015-11-20)
-------------------
-
-0.1.2 (2015-11-20)
-------------------
-
-0.1.1 (2015-11-20)
-------------------
-
-0.1.0 (2015-11-19)
-------------------
-* Initial Grizzly release.
-* Contributors: Mike Purvis, Tony Baltovski
+* Initial Hydro release.
+* Contributors: Mike Irvine, Mike Purvis, Prasenjit Mukherjee, Ryan Gariepy

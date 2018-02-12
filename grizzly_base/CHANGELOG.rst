@@ -1,44 +1,26 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package grizzly_base
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.1.7 (2016-10-03)
+0.2.1 (2015-10-17)
 ------------------
-* Removed GPS dependencies.
-* Contributors: Johannes Meyer, Tony Baltovski
-
-0.1.6 (2016-04-22)
-------------------
-* Combined hostname and version for hardware ID.
-* Fixed initialization of constant doubles.
-* Added hardware ID based hostname.
-* Contributors: Tony Baltovski
-
-0.1.5 (2016-03-02)
-------------------
-* Fixed state order for lighting.
-* Separated passive joint into header.
-* Contributors: Tony Baltovski
-
-0.1.4 (2015-12-01)
-------------------
-
-0.1.3 (2015-11-20)
-------------------
-* Install the grizzly_node target.
+* Launchfiles from RS232 comms option.
+* Modify MotorFanout to take advantage of active brake.
 * Contributors: Mike Purvis
 
-0.1.2 (2015-11-20)
+0.2.0 (2015-01-09)
 ------------------
-* Fixed dependency.
-* Contributors: Tony Baltovski
+* Add queue_size to rospy.Publisher.
+* Fix catkin includes typo.
+* Contributors: Mike Purvis
 
-0.1.1 (2015-11-20)
+0.1.1 (2014-02-25)
 ------------------
-* Added lighting.
-* Contributors: Tony Baltovski
+* Add missing roboteq dependencies
+* Installation of grizzly_base launchers.
+* Contributors: Mike Purvis
 
-0.1.0 (2015-11-19)
+0.1.0 (2014-02-14)
 ------------------
-* Initial Grizzly release.
-* Contributors: Mike Purvis, Tony Baltovski
+* Initial release for Hydro
+* Contributors: Mike Purvis
