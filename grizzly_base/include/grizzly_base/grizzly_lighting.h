@@ -32,14 +32,14 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 #include "ros/ros.h"
 
 #include "geometry_msgs/Twist.h"
-// #include "grizzly_msgs/Lights.h"
+#include "grizzly_msgs/Ambience.h"
 #include "grizzly_msgs/Status.h"
 #include "puma_motor_msgs/MultiStatus.h"
 
 namespace grizzly_base
 {
 
-typedef boost::array<uint32_t, 8> pattern;
+typedef boost::array<uint32_t, 4> pattern;
 typedef std::vector<pattern> LightsPatterns;
 
 
@@ -64,13 +64,14 @@ private:
 
   ros::Timer pub_timer_;
   ros::Timer user_timeout_;
+  ros::Timer wakeup_timeout_;
 
   bool allow_user_;
   bool user_publishing_;
   uint8_t state_;
   uint8_t old_state_;
   uint8_t current_pattern_count_;
-  uint32_t current_pattern_[8];
+  uint32_t current_pattern_[4];
 
   struct patterns
   {
@@ -85,18 +86,18 @@ private:
   }
   patterns_;
 
-  // void setRGB(grizzly_msgs::RGB* rgb, uint32_t colour);
-  // void setLights(grizzly_msgs::Lights* lights, uint32_t pattern[8]);
+  void setLights(grizzly_msgs::Ambience* lights, uint32_t pattern[4]);
 
   void updateState();
   void updatePattern();
 
-  // void userCmdCallback(const grizzly_msgs::Lights::ConstPtr& lights_msg);
-  // void mcuStatusCallback(const grizzly_msgs::Status::ConstPtr& status_msg);
+  void userCmdCallback(const grizzly_msgs::Ambience::ConstPtr& lights_msg);
+  void mcuStatusCallback(const grizzly_msgs::Status::ConstPtr& status_msg);
   void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg);
   void pumaStatusCallback(const puma_motor_msgs::MultiStatus::ConstPtr& status_msg);
   void timerCb(const ros::TimerEvent&);
   void userTimeoutCb(const ros::TimerEvent&);
+  void wakeupTimeoutCb(const ros::TimerEvent&);
 };
 
 }  // namespace grizzly_base

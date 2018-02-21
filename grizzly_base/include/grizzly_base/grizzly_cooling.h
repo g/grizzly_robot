@@ -38,7 +38,6 @@
 #include "geometry_msgs/Twist.h"
 #include "grizzly_msgs/Status.h"
 #include "std_msgs/Bool.h"
-// #include "grizzly_msgs/Fans.h"
 
 
 namespace grizzly_base

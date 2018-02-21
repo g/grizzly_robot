@@ -86,14 +86,6 @@ void GrizzlyCooling::cmdFansCallback(const ros::TimerEvent&)
   {
     cmd_fans_msg_.data = false;
   }
-  if (cmd_fans_msg_.data)
-  {
-      ROS_INFO("MESSAGE RECEIVED AS TRUE.");
-  }
-  else
-  {
-    ROS_INFO("FALSE");
-  }
   cmd_fans_pub_.publish(cmd_fans_msg_);
 }
 

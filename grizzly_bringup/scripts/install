@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-<<<<<<< HEAD
 import os
 import robot_upstart
 
@@ -30,28 +29,3 @@ PreferredTechnologies=wifi""",
 
 other_job = robot_upstart.Job()
 other_job.install(Provider=GrizzlyExtras)
-=======
-import robot_upstart
-import os
-
-j = robot_upstart.Job(workspace_setup=os.environ['ROBOT_SETUP'])
-
-# Stuff to launch on system startup.
-j.add(package="grizzly_bringup", glob="launch/core/*")
-j.add(package="grizzly_base", glob="launch/*")
-j.add(package="grizzly_motion", glob="launch/*")
-j.add(package="grizzly_navigation", glob="launch/*")
-j.add(package="grizzly_teleop", filename="launch/ps3nav_teleop.launch")
-
-# Glob URDF on startup also (experimental)
-j.add(package="grizzly_description", filename="urdf/base.urdf.xacro")
-
-j.install()
-
-"""
-if [[ -n "$ROBOT_EXTRAS_PACKAGE" ]]; then
-  echo "Installing extras specific to this robot from the $ROBOT_EXTRAS_PACKAGE package."
-  rosrun "$ROBOT_EXTRAS_PACKAGE" install
-fi
-"""
->>>>>>> master
