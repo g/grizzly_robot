@@ -46,6 +46,7 @@
 #include "grizzly_base/grizzly_hardware.h"
 #include "grizzly_base/grizzly_cooling.h"
 #include "grizzly_base/grizzly_lighting.h"
+#include "grizzly_base/grizzly_indicators.h"
 #include "grizzly_base/passive_joint_publisher.h"
 #include "puma_motor_driver/diagnostic_updater.h"
 #include "ros/ros.h"
@@ -142,6 +143,9 @@ int main(int argc, char* argv[])
 
   // Lighting control.
   grizzly_base::GrizzlyLighting lighting(&nh);
+
+  // Indicators control
+  grizzly_base::GrizzlyIndicators indicators(&nh);
 
   // Create diagnostic updater, to update itself on the ROS thread.
   grizzly_base::GrizzlyDiagnosticUpdater grizzly_diagnostic_updater;
