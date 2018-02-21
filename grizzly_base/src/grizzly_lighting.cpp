@@ -46,32 +46,19 @@ namespace States
 }  // namespace States
 typedef States::State State;
 
-namespace Colours
+namespace Intensities
 {
-  enum Colour
+  enum Intensity
   {
-    Off = 0x000000,
-    Red_H = 0xFF0000,
-    Red_M = 0xAA00000,
-    Red_L = 0x550000,
-    Green_H = 0x00FF00,
-    Green_M = 0x00AA00,
-    Green_L = 0x005500,
-    Blue_H = 0x0000FF,
-    Blue_M = 0x0000AA,
-    Blue_L = 0x000055,
-    Yellow_H = 0xFFFF00,
-    Yellow_M = 0xAAAA00,
-    Yellow_L = 0x555500,
-    Orange_H = 0xFFAE00,
-    Orange_M = 0xF0A80E,
-    Orange_L = 0xD69F27,
-    White_H = 0xFFFFFF,
-    White_M = 0xAAAAAA,
-    White_L = 0x555555
+    Off = 0x00,
+    High = 0xFF,
+    MedHigh = 0xAA,
+    Med = 0x5A,
+    MedLow = 0x1F,
+    Low = 0x05
   };
-}  // namespace Colours
-typedef Colours::Colour Colour;
+}  // namespace Intensities
+typedef Intensities::Intensity Intensity;
 
 
 GrizzlyLighting::GrizzlyLighting(ros::NodeHandle* nh) :
@@ -81,93 +68,101 @@ GrizzlyLighting::GrizzlyLighting(ros::NodeHandle* nh) :
   state_(States::Idle),
   current_pattern_count_(0)
 {
-  // lights_pub_ = nh_->advertise<grizzly_msgs::Lights>("mcu/cmd_lights", 1);
+  lights_pub_ = nh_->advertise<grizzly_msgs::Ambience>("mcu/cmd_ambience", 1);
 
-  // user_cmds_sub_ = nh_->subscribe("cmd_lights", 1, &GrizzlyLighting::userCmdCallback, this);
-  // mcu_status_sub_ = nh_->subscribe("mcu/status", 1, &GrizzlyLighting::mcuStatusCallback, this);
-  puma_status_sub_ = nh_->subscribe("status", 1, &GrizzlyLighting::pumaStatusCallback, this);
+  user_cmds_sub_ = nh_->subscribe("mcu/cmd_ambience", 1, &GrizzlyLighting::userCmdCallback, this);
+  mcu_status_sub_ = nh_->subscribe("mcu/status", 1, &GrizzlyLighting::mcuStatusCallback, this);
+  // puma_status_sub_ = nh_->subscribe("status", 1, &GrizzlyLighting::pumaStatusCallback, this);
   cmd_vel_sub_ = nh_->subscribe("cmd_vel", 1, &GrizzlyLighting::cmdVelCallback, this);
 
   pub_timer_ = nh_->createTimer(ros::Duration(1.0/5), &GrizzlyLighting::timerCb, this);
   user_timeout_ = nh_->createTimer(ros::Duration(1.0/1), &GrizzlyLighting::userTimeoutCb, this);
+  wakeup_timeout_ = nh_->createTimer(ros::Duration(5.2/1), &GrizzlyLighting::wakeupTimeoutCb, this, true);
 
-  using namespace Colours;  // NOLINT(build/namespaces)
-  patterns_.stopped.push_back(boost::assign::list_of(Red_H)(Red_H)(Red_H)(Red_H)(Red_H)(Red_H)(Red_H)(Red_H));
-  patterns_.stopped.push_back(boost::assign::list_of(Off)(Off)(Off)(Off)(Off)(Off)(Off)(Off));
+  using namespace Intensities;  // NOLINT(build/namespaces)
+  patterns_.stopped.push_back(boost::assign::list_of(High)(High)(High)(High));
+  patterns_.stopped.push_back(boost::assign::list_of(Off)(Off)(Off)(Off));
 
-  patterns_.fault.push_back(
-    boost::assign::list_of(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H));
-  patterns_.fault.push_back(boost::assign::list_of(Off)(Off)(Off)(Off)(Off)(Off)(Off)(Off));
+  patterns_.fault.push_back(boost::assign::list_of(Off)(High)(Off)(High));
+  patterns_.fault.push_back(boost::assign::list_of(High)(Off)(High)(Off));
 
-  patterns_.reset.push_back(boost::assign::list_of(Off)(Red_H)(Off)(Red_H)(Yellow_H)(Yellow_H)(Red_H)(Off));
-  patterns_.reset.push_back(boost::assign::list_of(Red_H)(Off)(Red_H)(Off)(Red_H)(Red_H)(Off)(Red_H));
-
+  patterns_.reset.push_back(boost::assign::list_of(High)(High)(Off)(Off));
+  patterns_.reset.push_back(boost::assign::list_of(Off)(Off)(High)(High));
+  
   patterns_.low_battery.push_back(
-    boost::assign::list_of(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L));
+    boost::assign::list_of(Low)(Low)(Low)(Low));
   patterns_.low_battery.push_back(
-    boost::assign::list_of(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M));
+    boost::assign::list_of(MedLow)(MedLow)(MedLow)(MedLow));
   patterns_.low_battery.push_back(
-    boost::assign::list_of(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H)(Orange_H));
+    boost::assign::list_of(Med)(Med)(Med)(Med));
   patterns_.low_battery.push_back(
-    boost::assign::list_of(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M)(Orange_M));
+    boost::assign::list_of(MedHigh)(MedHigh)(MedHigh)(MedHigh));
   patterns_.low_battery.push_back(
-    boost::assign::list_of(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L)(Orange_L));
+    boost::assign::list_of(High)(High)(High)(High));
+  patterns_.low_battery.push_back(
+    boost::assign::list_of(MedHigh)(MedHigh)(MedHigh)(MedHigh));
+  patterns_.low_battery.push_back(
+    boost::assign::list_of(Med)(Med)(Med)(Med));
+  patterns_.low_battery.push_back(
+    boost::assign::list_of(MedLow)(MedLow)(MedLow)(MedLow));
+  patterns_.low_battery.push_back(
+    boost::assign::list_of(Low)(Low)(Low)(Low));
 
   patterns_.charged.push_back(
-    boost::assign::list_of(Green_H)(Green_H)(Green_H)(Green_H)(Green_H)(Green_H)(Green_H)(Green_H));
+    boost::assign::list_of(High)(High)(High)(High));
 
   patterns_.charging.push_back(
-    boost::assign::list_of(Green_L)(Green_L)(Green_L)(Green_L)(Green_L)(Green_L)(Green_L)(Green_L));
+    boost::assign::list_of(High)(Off)(Off)(Off));
   patterns_.charging.push_back(
-    boost::assign::list_of(Green_M)(Green_M)(Green_M)(Green_M)(Green_M)(Green_M)(Green_M)(Green_M));
+    boost::assign::list_of(Off)(High)(Off)(Off));
   patterns_.charging.push_back(
-    boost::assign::list_of(Green_H)(Green_H)(Green_H)(Green_H)(Green_H)(Green_H)(Green_H)(Green_H));
+    boost::assign::list_of(Off)(Off)(High)(Off));
   patterns_.charging.push_back(
-    boost::assign::list_of(Green_M)(Green_M)(Green_M)(Green_M)(Green_M)(Green_M)(Green_M)(Green_M));
-  patterns_.charging.push_back(
-    boost::assign::list_of(Green_L)(Green_L)(Green_L)(Green_L)(Green_L)(Green_L)(Green_L)(Green_L));
+    boost::assign::list_of(Off)(Off)(Off)(High));
 
-  patterns_.driving.push_back(
-    boost::assign::list_of(White_M)(White_M)(White_M)(White_M)(Red_M)(Red_M)(Red_M)(Red_M));
+  patterns_.driving.push_back(boost::assign::list_of(High)(High)(High)(High));
 
+  patterns_.idle.push_back(boost::assign::list_of(Low)(Low)(Low)(Low));
+
+  for(int i = 0; i < 13; i++)
+  {
   patterns_.idle.push_back(
-    boost::assign::list_of(White_L)(White_L)(White_L)(White_L)(Red_L)(Red_L)(Red_L)(Red_L));
+    boost::assign::list_of(Low + i*20)(Low + i*20)(Low + i*20)(Low + i*20));
+  }
+  for(int j = 0; j < 13; j++)
+  {
+  patterns_.idle.push_back(
+    boost::assign::list_of(High - j*20)(High - j*20)(High - j*20)(High - j*20));
+  }
+
 }
 
-
-// void GrizzlyLighting::setRGB(grizzly_msgs::RGB* rgb, uint32_t colour)
-// {
-//   rgb->red = ((colour & 0xFF0000) >> 16) / 255.0;
-//   rgb->green = ((colour & 0x00FF00) >> 8) / 255.0;
-//   rgb->blue = ((colour & 0x0000FF)) / 255.0;
-// }
-
-// void GrizzlyLighting::setLights(grizzly_msgs::Lights* lights, uint32_t pattern[8])
-// {
-//   for (int i = 0; i < 8; i++)
-//   {
-//     setRGB(&lights->lights[i], pattern[i]);
-//   }
-// }
-
-// void GrizzlyLighting::userCmdCallback(const grizzly_msgs::Lights::ConstPtr& lights_msg)
-// {
-//   if (allow_user_)
-//   {
-//     lights_pub_.publish(lights_msg);
-//   }
-//   user_publishing_ = true;
-// }
-
-// void GrizzlyLighting::mcuStatusCallback(const grizzly_msgs::Status::ConstPtr& status_msg)
-// {
-//   mcu_status_msg_ = *status_msg;
-// }
-
-void GrizzlyLighting::pumaStatusCallback(const puma_motor_msgs::MultiStatus::ConstPtr& status_msg)
+void GrizzlyLighting::setLights(grizzly_msgs::Ambience* lights, uint32_t pattern[4])
 {
-  pumas_status_msg_ = *status_msg;
+  for (int i = 0; i < 4; i++)
+  {
+    lights->body_lights[i] = pattern[i];
+  }
 }
+
+void GrizzlyLighting::userCmdCallback(const grizzly_msgs::Ambience::ConstPtr& lights_msg)
+{
+  if (allow_user_)
+  {
+    lights_pub_.publish(lights_msg);
+  }
+  user_publishing_ = true;
+}
+
+void GrizzlyLighting::mcuStatusCallback(const grizzly_msgs::Status::ConstPtr& status_msg)
+{
+  mcu_status_msg_ = *status_msg;
+}
+
+// void GrizzlyLighting::pumaStatusCallback(const puma_motor_msgs::MultiStatus::ConstPtr& status_msg)
+// {
+//   pumas_status_msg_ = *status_msg;
+// }
 
 void GrizzlyLighting::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
@@ -178,22 +173,10 @@ void GrizzlyLighting::timerCb(const ros::TimerEvent&)
 {
   updateState();
 
-  if (state_ >= States::Charged)
-  {
-    allow_user_ = false;
-  }
-  else
-  {
-    allow_user_ = true;
-  }
-
-  // if (!user_publishing_ || !allow_user_)
-  // {
-  //   grizzly_msgs::Lights lights_msg;
-  //   updatePattern();
-  //   setLights(&lights_msg, &current_pattern_[0]);
-  //   lights_pub_.publish(lights_msg);
-  // }
+  grizzly_msgs::Ambience lights_msg;
+  updatePattern();
+  setLights(&lights_msg, &current_pattern_[0]);
+  lights_pub_.publish(lights_msg);
 }
 
 void GrizzlyLighting::userTimeoutCb(const ros::TimerEvent&)
@@ -201,12 +184,19 @@ void GrizzlyLighting::userTimeoutCb(const ros::TimerEvent&)
   user_publishing_ = false;
 }
 
+void GrizzlyLighting::wakeupTimeoutCb(const ros::TimerEvent&)
+{
+  patterns_.idle.clear();
+  patterns_.idle.push_back(boost::assign::list_of(0x05)(0x05)(0x05)(0x05)); // After wakeup finishes set idle pattern to "Low" 
+}
+
+//TODO: Add fault check based on motor controller status message.
 void GrizzlyLighting::updateState()
 {
-  // if (mcu_status_msg_.stop_engaged == true)
-  // {
-  //   state_ = States::Stopped;
-  // }
+  if (mcu_status_msg_.external_stop_engaged == true)
+  {
+    state_ = States::Stopped;
+  }
   // else if (mcu_status_msg_.drivers_active == false)
   // {
   //   state_ = States::NeedsReset;
@@ -219,28 +209,20 @@ void GrizzlyLighting::updateState()
   // {
   //   state_ = States::Fault;
   // }
-  // else if (mcu_status_msg_.measured_battery <= 24.0)
-  // {
-  //   state_ = States::LowBattery;
-  // }
-  // else if (mcu_status_msg_.charging_complete == true)
-  // {
-  //   state_ = States::Charged;
-  // }
-  // else if (mcu_status_msg_.charger_connected == true)
-  // {
-  //   state_ = States::Charging;
-  // }
-  // else if (cmd_vel_msg_.linear.x != 0.0 ||
-  //          cmd_vel_msg_.linear.y != 0.0 ||
-  //          cmd_vel_msg_.angular.z != 0.0)
-  // {
-  //   state_ = States::Driving;
-  // }
-  // else
-  // {
+  else if (mcu_status_msg_.measured_battery <= 24.0)
+  {
+    state_ = States::LowBattery;
+  }
+  else if (cmd_vel_msg_.linear.x != 0.0 ||
+           cmd_vel_msg_.linear.y != 0.0 ||
+           cmd_vel_msg_.angular.z != 0.0)
+  {
+    state_ = States::Driving;
+  }
+  else
+  {
     state_ = States::Idle;
-  // }
+  }
 }
 
 void GrizzlyLighting::updatePattern()

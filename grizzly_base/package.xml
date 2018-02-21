@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>grizzly_base</name>
   <version>0.2.1</version>
   <description>Grizzly's mobility and sensor base.</description>
 
+  <author email="rgariepy@clearpathrobotics.com">Ryan Gariepy</author>
   <author email="mpurvis@clearpathrobotics.com">Mike Purvis</author>
-  <author email="tbaltovski@clearpathrobotics.com">Tony Baltovski</author>
 
   <maintainer email="tbaltovski@clearpathrobotics.com">Tony Baltovski</maintainer>
 
@@ -15,43 +15,33 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>controller_manager</build_depend>
-  <build_depend>diagnostic_updater</build_depend>
-  <build_depend>geometry_msgs</build_depend>
+  <depend>controller_manager</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>puma_motor_msgs</depend>
+  <depend>puma_motor_driver</depend>
+  <depend>geometry_msgs</depend>
+  <depend>grizzly_msgs</depend>
+  <depend>realtime_tools</depend>
+  <depend>rosserial_server</depend>
+  <depend>sensor_msgs</depend>
+  <depend>topic_tools</depend>
+
   <build_depend>hardware_interface</build_depend>
-  <build_depend>grizzly_msgs</build_depend>
-  <build_depend>puma_motor_msgs</build_depend>
-  <build_depend>puma_motor_driver</build_depend>
-  <build_depend>realtime_tools</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>roslaunch</build_depend>
-  <build_depend>roslint</build_depend>
-  <build_depend>rosserial_server</build_depend>
-  <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
-  <build_depend>teleop_twist_joy</build_depend>
-  <build_depend>topic_tools</build_depend>
 
-  <run_depend>controller_manager</run_depend>
-  <run_depend>diagnostic_aggregator</run_depend>
-  <run_depend>diagnostic_updater</run_depend>
-  <run_depend>diff_drive_controller</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>imu_filter_madgwick</run_depend>
-  <run_depend>grizzly_control</run_depend>
-  <run_depend>grizzly_description</run_depend>
-  <run_depend>grizzly_msgs</run_depend>
-  <run_depend>puma_motor_msgs</run_depend>
-  <run_depend>puma_motor_driver</run_depend>
-  <run_depend>python-scipy</run_depend>
-  <run_depend>realtime_tools</run_depend>
-  <run_depend>rosserial_python</run_depend>
-  <run_depend>rosserial_server</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>teleop_twist_joy</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>topic_tools</run_depend>
-  <run_depend>socat</run_depend>
+  <exec_depend>socat</exec_depend>
+  <exec_depend>diagnostic_aggregator</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>imu_filter_madgwick</exec_depend>
+  <exec_depend>grizzly_control</exec_depend>
+  <exec_depend>grizzly_description</exec_depend>
+  <exec_depend>python-scipy</exec_depend>
+  <exec_depend>rosserial_python</exec_depend>
+  <exec_depend>tf</exec_depend>
+
+  <test_depend>roslint</test_depend>
 
   <export>
   </export>

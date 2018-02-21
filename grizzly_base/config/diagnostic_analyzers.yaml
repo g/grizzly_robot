@@ -32,10 +32,3 @@ analyzers:
         timeout: 5.0
         expected: [
           'grizzly_node: /imu/data_raw topic status']
-      teleop:
-        type: diagnostic_aggregator/GenericAnalyzer
-        path: Bluetooth Joystick
-        remove_prefix: 'bluetooth_teleop/joy_node'
-        timeout: 5.0
-        expected: [
-          'bluetooth_teleop/joy_node: Joystick Driver Status' ]

@@ -118,18 +118,17 @@ void GrizzlyDiagnosticUpdater::batteryDiagnostics(diagnostic_updater::Diagnostic
 void GrizzlyDiagnosticUpdater::voltageDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
 {
   stat.add("12V Supply (V)", last_status_->measured_12v);
-  stat.add("5V Supply (V)", last_status_->measured_5v);
 
-  if (last_status_->measured_12v > 12.5 || last_status_->measured_5v > 5.5)
+  if (last_status_->measured_12v > 12.5)
   {
     stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR,
         "User supply overvoltage. Accessories may be damaged.");
   }
-  else if (last_status_->measured_12v < 1.0 || last_status_->measured_5v < 1.0)
+  else if (last_status_->measured_12v < 1.0)
   {
     stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "User supplies absent. Check tray fuses.");
   }
-  else if (last_status_->measured_12v < 11.0 || last_status_->measured_5v < 4.0)
+  else if (last_status_->measured_12v < 11.0)
   {
     stat.summary(diagnostic_msgs::DiagnosticStatus::WARN, "Voltage supplies undervoltage. Check loading levels.");
   }
