@@ -95,7 +95,10 @@ void GrizzlyIndicators::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd
 void GrizzlyIndicators::calculateBatteryLevel()
 {
   // Convert SOC value b/w 0 and 1 to equivalent Battery Level with values b/w 0 and 255
-  battery_level_ = round((initial_soc_ - total_energy_consumed_/BATTERY_CAPACITY_) * 255);
+  if ((initial_soc_ - total_energy_consumed_/BATTERY_CAPACITY_) <= 0)
+    battery_level_ = 0;
+  else
+    battery_level_ = round((initial_soc_ - total_energy_consumed_/BATTERY_CAPACITY_) * 255);
 }
 
 void GrizzlyIndicators::getSocEstimate(double voltage)
