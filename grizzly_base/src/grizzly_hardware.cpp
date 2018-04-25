@@ -44,7 +44,7 @@ GrizzlyHardware::GrizzlyHardware(ros::NodeHandle& nh, ros::NodeHandle& pnh, griz
   ros::V_string joint_names =
       boost::assign::list_of("front_left_wheel")("front_right_wheel")("rear_left_wheel")("rear_right_wheel");
   std::vector<uint8_t> joint_canids = boost::assign::list_of(3)(4)(5)(6);
-  std::vector<float> joint_directions = boost::assign::list_of(-1)(1)(-1)(1);
+  std::vector<float> joint_directions = boost::assign::list_of(1)(-1)(1)(-1);
 
   for (uint8_t i = 0; i < joint_names.size(); i++)
   {
@@ -79,10 +79,10 @@ void GrizzlyHardware::updateJointsFromHardware()
   uint8_t index = 0;
   for (const auto& driver : drivers_)
   {
-    // Joint* f = &joints_[index];
-    // f->effort = driver->lastCurrent();
-    // f->position = driver->lastPosition();
-    // f->velocity = driver->lastSpeed();
+    Joint* f = &joints_[index];
+    f->effort = driver->getOutputCurrent();
+    f->position = driver->getMeasuredTravel();
+    f->velocity = driver->getMeasuredVelocity();
     index++;
   }
 }
@@ -105,7 +105,6 @@ void GrizzlyHardware::requestData()
 {
   for (auto& driver : drivers_)
   {
-    ROS_INFO("Req. %d", driver->getId());
     driver->requestStatus();
     driver->requestFeedback();
   }
@@ -198,7 +197,7 @@ bool GrizzlyHardware::connectIfNotConnected()
  */
 void GrizzlyHardware::command()
 {
-  static uint8_t i = 0;
+  uint8_t i = 0;
   for (auto& driver : drivers_)
   {
     driver->setSpeed(joints_[i].velocity_command);

@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
   boost::thread(boost::bind(&boost::asio::io_service::run, &io_service));
 
   std::string canbus_dev;
-  pnh.param<std::string>("canbus_dev", canbus_dev, "can0");
+  pnh.param<std::string>("canbus_dev", canbus_dev, "vcan0");
   grizzly_motor_driver::Interface interface(canbus_dev);
 
   grizzly_base::GrizzlyHardware grizzly(nh, pnh, interface);
@@ -134,12 +134,12 @@ int main(int argc, char* argv[])
   // Configure the CAN connection
   grizzly.init();
   // Create a thread to start reading can messages.
-  boost::thread canReadT(&canReadThread, ros::Rate(50), &grizzly);
+  std::thread canReadT(&canReadThread, ros::Rate(200), &grizzly);
 
   // Background thread for the controls callback.
   ros::NodeHandle controller_nh("");
   controller_manager::ControllerManager cm(&grizzly, controller_nh);
-  boost::thread controlT(&controlThread, ros::Rate(25), &grizzly, &cm);
+  std::thread controlT(&controlThread, ros::Rate(25), &grizzly, &cm);
 
   // Lighting control.
   grizzly_base::GrizzlyLighting lighting(&nh);
