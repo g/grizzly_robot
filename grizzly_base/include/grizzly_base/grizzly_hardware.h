@@ -36,38 +36,38 @@
 #define GRIZZLY_BASE_GRIZZLY_HARDWARE_H
 
 #include <vector>
-
-#include "boost/thread.hpp"
-#include "boost/foreach.hpp"
-#include "boost/shared_ptr.hpp"
+#include <thread>
+#include "boost/assign.hpp"
 #include "hardware_interface/joint_state_interface.h"
 #include "hardware_interface/joint_command_interface.h"
 #include "hardware_interface/robot_hw.h"
 #include "ros/ros.h"
 #include "sensor_msgs/JointState.h"
-#include "puma_motor_driver/socketcan_gateway.h"
-#include "puma_motor_driver/driver.h"
-#include "puma_motor_driver/multi_driver_node.h"
-#include "puma_motor_msgs/MultiFeedback.h"
+
+#include "grizzly_motor_driver/driver.h"
+#include "grizzly_motor_driver/frame.h"
+#include "grizzly_motor_driver/interface.h"
+#include "grizzly_motor_driver/node.h"
+#include "grizzly_motor_driver/diagnostic_updater.h"
+
+#include "std_msgs/Float64.h"
 
 namespace grizzly_base
 {
-
 class GrizzlyHardware : public hardware_interface::RobotHW
 {
 public:
-  GrizzlyHardware(ros::NodeHandle& nh, ros::NodeHandle& pnh,
-                    puma_motor_driver::Gateway& gateway);
-  void init();  // Connect to CAN
+  GrizzlyHardware(ros::NodeHandle& nh, ros::NodeHandle& pnh, grizzly_motor_driver::Interface& gateway);
+  void init();                   // Connect to CAN
   bool connectIfNotConnected();  // Keep trying till it connects
-  std::vector<puma_motor_driver::Driver>& getDrivers();
+  std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> getDrivers();
   void configure();  // Configures the motor drivers
   void verify();
   bool isActive();
 
   void powerHasNotReset();  // Checks if power has been reset
-  bool inReset();  // Returns if the cm should be reset based on the state of the motors drivers.
-                   // If they have been configured.
+  bool inReset();           // Returns if the cm should be reset based on the state of the motors drivers.
+                            // If they have been configured.
   void requestData();
   void updateJointsFromHardware();
   void command();
@@ -78,9 +78,9 @@ public:
 private:
   ros::NodeHandle nh_, pnh_;
 
-  puma_motor_driver::Gateway& gateway_;
-  std::vector<puma_motor_driver::Driver> drivers_;
-  boost::shared_ptr<puma_motor_driver::MultiDriverNode> multi_driver_node_;
+  grizzly_motor_driver::Interface& interface_;
+  std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> drivers_;
+  std::shared_ptr<grizzly_motor_driver::Node> node_;
 
   bool active_;
   double gear_ratio_;
@@ -89,6 +89,10 @@ private:
   // ROS Control interfaces
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::VelocityJointInterface velocity_joint_interface_;
+
+  // temp test sub
+  ros::Subscriber velocitySub;
+  void velocityCB(const std_msgs::Float64ConstPtr& msg);
 
   // These are mutated on the controls thread only.
   struct Joint
@@ -101,8 +105,7 @@ private:
     Joint() : position(0), velocity(0), effort(0), velocity_command(0)
     {
     }
-  }
-  joints_[4];
+  } joints_[4];
 };
 
 }  // namespace grizzly_base

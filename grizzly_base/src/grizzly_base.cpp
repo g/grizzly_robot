@@ -48,7 +48,7 @@
 #include "grizzly_base/grizzly_lighting.h"
 #include "grizzly_base/grizzly_indicators.h"
 #include "grizzly_base/passive_joint_publisher.h"
-#include "puma_motor_driver/diagnostic_updater.h"
+#include "grizzly_motor_driver/diagnostic_updater.h"
 #include "ros/ros.h"
 #include "rosserial_server/udp_socket_session.h"
 
@@ -127,14 +127,14 @@ int main(int argc, char* argv[])
 
   std::string canbus_dev;
   pnh.param<std::string>("canbus_dev", canbus_dev, "can0");
-  puma_motor_driver::SocketCANGateway gateway(canbus_dev);
+  grizzly_motor_driver::Interface interface(canbus_dev);
 
-  grizzly_base::GrizzlyHardware grizzly(nh, pnh, gateway);
+  grizzly_base::GrizzlyHardware grizzly(nh, pnh, interface);
 
   // Configure the CAN connection
   grizzly.init();
   // Create a thread to start reading can messages.
-  boost::thread canReadT(&canReadThread, ros::Rate(200), &grizzly);
+  boost::thread canReadT(&canReadThread, ros::Rate(50), &grizzly);
 
   // Background thread for the controls callback.
   ros::NodeHandle controller_nh("");
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 
   // Create diagnostic updater, to update itself on the ROS thread.
   grizzly_base::GrizzlyDiagnosticUpdater grizzly_diagnostic_updater;
-  puma_motor_driver::PumaMotorDriverDiagnosticUpdater puma_motor_driver_diagnostic_updater;
+  grizzly_motor_driver::GrizzlyMotorDriverDiagnosticUpdater grizzly_motor_driver_diagnostic_updater;
 
   // Joint state publisher for passive front axle.
   ros::V_string passive_joint = boost::assign::list_of("front_rocker");

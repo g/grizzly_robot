@@ -65,7 +65,7 @@ private:
   uint8_t indicator_lights_[3];
   double last_gps_msg_secs_;
 
-  static const double GPS_COMMAND_TIMEOUT_SECS_ = 10;
+  static constexpr double GPS_COMMAND_TIMEOUT_SECS_ = 10;
 
   void setIndicators(grizzly_msgs::Indicators* indicators, uint8_t indicator_lights[3]);
   void updateMessage(double gps_msg_secs);
@@ -77,11 +77,11 @@ private:
   void timerCb(const ros::TimerEvent&);
 
   // Variables and Functions for Battery Level calculations
-  static const double BATTERY_FULL_ = 50.0;
-  static const double BATTERY_EMPTY_ = 46.5;
-  static const double BATTERY_CAPACITY_ = 105*48*2; // 105Ah * 48V * 2 Battery Packs
+  static constexpr double BATTERY_FULL_ = 50.0;
+  static constexpr double BATTERY_EMPTY_ = 46.5;
+  static constexpr double BATTERY_CAPACITY_ = 105*48*2; // 105Ah * 48V * 2 Battery Packs
   // Constants used for initial SOC calculation
-  static const double A1_ = 0.5256, B1_ = 50.09, C1_ = 0.0485,
+  static constexpr double A1_ = 0.5256, B1_ = 50.09, C1_ = 0.0485,
                       A2_ = 0.8292, B2_ = 51.94, C2_ = 2.822;
 
   bool first_mcu_msg_received_;
