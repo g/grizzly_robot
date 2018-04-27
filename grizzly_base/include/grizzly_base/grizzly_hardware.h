@@ -62,8 +62,10 @@ public:
   bool connectIfNotConnected();  // Keep trying till it connects
   std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> getDrivers();
   void configure();  // Configures the motor drivers
-  void verify();
+  void reconfigure();
+  void triggerFault();
   bool isActive();
+  bool isFault();
 
   void powerHasNotReset();  // Checks if power has been reset
   bool inReset();           // Returns if the cm should be reset based on the state of the motors drivers.

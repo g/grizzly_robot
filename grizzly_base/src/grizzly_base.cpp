@@ -32,7 +32,6 @@
  *
  */
 
-
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -49,6 +48,7 @@
 #include "grizzly_base/grizzly_indicators.h"
 #include "grizzly_base/passive_joint_publisher.h"
 #include "grizzly_motor_driver/diagnostic_updater.h"
+#include "grizzly_base/grizzly_motor_stop.h"
 #include "ros/ros.h"
 #include "rosserial_server/udp_socket_session.h"
 
@@ -57,7 +57,8 @@ using boost::asio::ip::address;
 
 typedef boost::chrono::steady_clock time_source;
 
-void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, controller_manager::ControllerManager* cm)
+void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, controller_manager::ControllerManager* cm,
+                   grizzly_base::MotorStopPublisher* motor_stop)
 {
   time_source::time_point last_time = time_source::now();
 
@@ -69,12 +70,32 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
     ros::Duration elapsed(elapsed_duration.count());
     last_time = this_time;
 
+    if (robot->isActive() || robot->isFault())
+    {
+      static ros::Duration estop_delay(0);
+      if (motor_stop->shouldReset() && estop_delay.isZero())
+      {
+        estop_delay += elapsed;
+        robot->triggerFault();
+      }
+      else if (estop_delay >= ros::Duration(3))
+      {
+        estop_delay = ros::Duration(0);
+        robot->reconfigure();
+        motor_stop->clearReset();
+      }
+      else if (!estop_delay.isZero())
+      {
+        estop_delay += elapsed;
+      }
+    }
+
     if (robot->isActive())
     {
       robot->powerHasNotReset();
       robot->updateJointsFromHardware();
     }
-    else
+    if (!robot->isActive())
     {
       robot->configure();
     }
@@ -85,12 +106,9 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
 
     if (robot->isActive())
     {
+      motor_stop->clearReset();
       robot->command();
       robot->requestData();
-    }
-    else
-    {
-      robot->verify();
     }
 
     robot->canSend();
@@ -119,10 +137,8 @@ int main(int argc, char* argv[])
   // For use the serial rosserial server to connect over socat. Future work
   // will create a native UDP rosserial server that this can migrate to. Specify
   // baud rate because we have to, but in reality it doesn't matter.
-  new rosserial_server::UdpSocketSession(
-      io_service,
-      udp::endpoint(address::from_string("192.168.131.1"), 11411),
-      udp::endpoint(address::from_string("192.168.131.2"), 11411));
+  new rosserial_server::UdpSocketSession(io_service, udp::endpoint(address::from_string("192.168.131.1"), 11411),
+                                         udp::endpoint(address::from_string("192.168.131.2"), 11411));
   boost::thread(boost::bind(&boost::asio::io_service::run, &io_service));
 
   std::string canbus_dev;
@@ -139,7 +155,11 @@ int main(int argc, char* argv[])
   // Background thread for the controls callback.
   ros::NodeHandle controller_nh("");
   controller_manager::ControllerManager cm(&grizzly, controller_nh);
-  std::thread controlT(&controlThread, ros::Rate(25), &grizzly, &cm);
+  // This provides the ability to use a off-board software base stop for the base platform.
+  bool external_stop;
+  pnh.param<bool>("offboard_stop_control", external_stop, false);
+  grizzly_base::MotorStopPublisher motor_stop_publisher(&nh, 10, external_stop);
+  std::thread controlT(&controlThread, ros::Rate(25), &grizzly, &cm, &motor_stop_publisher);
 
   // Lighting control.
   grizzly_base::GrizzlyLighting lighting(&nh);

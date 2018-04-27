@@ -101,6 +101,18 @@ bool GrizzlyHardware::isActive()
   return true;
 }
 
+bool GrizzlyHardware::isFault()
+{
+  for (const auto& driver : drivers_)
+  {
+    if (driver->isFault())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 void GrizzlyHardware::requestData()
 {
   for (auto& driver : drivers_)
@@ -134,12 +146,20 @@ void GrizzlyHardware::configure()
     driver->run();
   }
 }
-void GrizzlyHardware::verify()
+void GrizzlyHardware::reconfigure()
 {
-  // BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
-  // {
-  //   driver.verifyParams();
-  // }
+  for (auto& driver : drivers_)
+  {
+    driver->resetState();
+  }
+}
+
+void GrizzlyHardware::triggerFault()
+{
+  for (auto& driver : drivers_)
+  {
+    driver->setFault();
+  }
 }
 
 bool GrizzlyHardware::inReset()
