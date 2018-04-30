@@ -82,6 +82,12 @@ public:
     has_stopped_ = false;
   }
 
+  void publishStop()
+  {
+    const std_msgs::Bool msg;
+    pub_.publish(msg);
+  }
+
 private:
   ros::NodeHandle* nh_;
   std_msgs::Bool msg_;

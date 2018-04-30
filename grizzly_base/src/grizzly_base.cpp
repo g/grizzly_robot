@@ -73,20 +73,24 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
     if (robot->isActive() || robot->isFault())
     {
       static ros::Duration estop_delay(0);
-      if (motor_stop->shouldReset() && estop_delay.isZero())
+      if (estop_delay.isZero() && (motor_stop->shouldReset() || robot->isFault()))
       {
         estop_delay += elapsed;
+        motor_stop->publishStop();
         robot->triggerFault();
-      }
-      else if (estop_delay >= ros::Duration(3))
-      {
-        estop_delay = ros::Duration(0);
-        robot->reconfigure();
-        motor_stop->clearReset();
       }
       else if (!estop_delay.isZero())
       {
-        estop_delay += elapsed;
+        if (estop_delay >= ros::Duration(3))
+        {
+          estop_delay = ros::Duration(0);
+          robot->reconfigure();
+          motor_stop->clearReset();
+        }
+        else
+        {
+          estop_delay += elapsed;
+        }
       }
     }
 
@@ -106,7 +110,7 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
 
     if (robot->isActive())
     {
-      motor_stop->clearReset();
+      motor_stop->clearReset();  // clear any estop signal just before sending first command
       robot->command();
       robot->requestData();
     }
