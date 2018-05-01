@@ -63,11 +63,12 @@ public:
   std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> getDrivers();
   void configure();  // Configures the motor drivers
   void reconfigure();
-  void triggerFault();
+  void triggerStopping();
   bool isActive();
+  bool anyActive();
   bool isFault();
+  bool isStopping();
 
-  void powerHasNotReset();  // Checks if power has been reset
   bool inReset();           // Returns if the cm should be reset based on the state of the motors drivers.
                             // If they have been configured.
   void requestData();

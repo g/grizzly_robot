@@ -85,6 +85,7 @@ public:
   void publishStop()
   {
     const std_msgs::Bool msg;
+    has_stopped_ =  true;
     pub_.publish(msg);
   }
 

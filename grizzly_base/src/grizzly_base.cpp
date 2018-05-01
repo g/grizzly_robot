@@ -61,6 +61,8 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
                    grizzly_base::MotorStopPublisher* motor_stop)
 {
   time_source::time_point last_time = time_source::now();
+  ros::Duration estop_delay(0);
+  bool was_active = false;
 
   while (1)
   {
@@ -70,14 +72,22 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
     ros::Duration elapsed(elapsed_duration.count());
     last_time = this_time;
 
-    if (robot->isActive() || robot->isFault())
+    if (robot->isFault())
     {
-      static ros::Duration estop_delay(0);
-      if (estop_delay.isZero() && (motor_stop->shouldReset() || robot->isFault()))
+      motor_stop->publishStop();
+      robot->triggerStopping();
+    }
+    else if (!robot->isStopping() && motor_stop->shouldReset() && robot->anyActive())
+    {
+      robot->triggerStopping();
+      motor_stop->clearReset();
+    }
+
+    if (robot->isStopping())
+    {
+      if (estop_delay.isZero())
       {
         estop_delay += elapsed;
-        motor_stop->publishStop();
-        robot->triggerFault();
       }
       else if (!estop_delay.isZero())
       {
@@ -96,12 +106,15 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
 
     if (robot->isActive())
     {
-      robot->powerHasNotReset();
       robot->updateJointsFromHardware();
     }
     if (!robot->isActive())
     {
       robot->configure();
+      if (!robot->anyActive())
+      {
+        was_active = false;
+      }
     }
 
     robot->canSend();
@@ -110,9 +123,13 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
 
     if (robot->isActive())
     {
-      motor_stop->clearReset();  // clear any estop signal just before sending first command
       robot->command();
       robot->requestData();
+    }
+    if (robot->anyActive() && !was_active)
+    {
+      motor_stop->clearReset();  // clear estops just after configuring
+      was_active = true;
     }
 
     robot->canSend();

@@ -101,11 +101,35 @@ bool GrizzlyHardware::isActive()
   return true;
 }
 
+bool GrizzlyHardware::anyActive()
+{
+  for (const auto& driver : drivers_)
+  {
+    if (driver->isRunning())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool GrizzlyHardware::isFault()
 {
   for (const auto& driver : drivers_)
   {
     if (driver->isFault())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool GrizzlyHardware::isStopping()
+{
+  for (const auto& driver : drivers_)
+  {
+    if (driver->isStopping())
     {
       return true;
     }
@@ -120,23 +144,6 @@ void GrizzlyHardware::requestData()
     driver->requestStatus();
     driver->requestFeedback();
   }
-}
-void GrizzlyHardware::powerHasNotReset()
-{
-  // // Checks to see if power flag has been reset for each driver
-  // BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
-  // {
-  //   if (driver.lastPower() != 0)
-  //   {
-  //     active_ = false;
-  //     ROS_WARN("There was a power rest on Dev: %d, will reconfigure all drivers.", driver.deviceNumber());
-  //     multi_driver_node_->activePublishers(active_);
-  //     BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
-  //     {
-  //       driver.resetConfiguration();
-  //     }
-  //   }
-  // }
 }
 
 void GrizzlyHardware::configure()
@@ -154,11 +161,11 @@ void GrizzlyHardware::reconfigure()
   }
 }
 
-void GrizzlyHardware::triggerFault()
+void GrizzlyHardware::triggerStopping()
 {
   for (auto& driver : drivers_)
   {
-    driver->setFault();
+    driver->setStopping();
   }
 }
 
