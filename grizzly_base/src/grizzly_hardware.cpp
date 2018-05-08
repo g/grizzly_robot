@@ -65,7 +65,6 @@ GrizzlyHardware::GrizzlyHardware(ros::NodeHandle& nh, ros::NodeHandle& pnh, griz
   registerInterface(&velocity_joint_interface_);
 
   node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
-  velocitySub = pnh.subscribe("test_speed", 1, &GrizzlyHardware::velocityCB, this);
 }
 
 /**
@@ -236,13 +235,5 @@ void GrizzlyHardware::command()
 std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> GrizzlyHardware::getDrivers()
 {
   return drivers_;
-}
-
-void GrizzlyHardware::velocityCB(const std_msgs::Float64ConstPtr& msg)
-{
-  for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
-  {
-    driver->setSpeed(msg->data);
-  }
 }
 }  // namespace grizzly_base

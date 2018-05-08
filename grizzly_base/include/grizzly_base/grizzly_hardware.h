@@ -93,10 +93,6 @@ private:
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::VelocityJointInterface velocity_joint_interface_;
 
-  // temp test sub
-  ros::Subscriber velocitySub;
-  void velocityCB(const std_msgs::Float64ConstPtr& msg);
-
   // These are mutated on the controls thread only.
   struct Joint
   {
