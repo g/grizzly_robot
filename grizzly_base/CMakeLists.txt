@@ -4,7 +4,7 @@ project(grizzly_base)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS
-  controller_manager diagnostic_updater geometry_msgs hardware_interface grizzly_motor_driver
+  controller_manager diagnostic_updater geometry_msgs hardware_interface grizzly_motor_driver grizzly_motor_msgs
   realtime_tools grizzly_msgs roscpp rosserial_server sensor_msgs std_msgs topic_tools)
 find_package(Boost REQUIRED COMPONENTS thread chrono)
 
