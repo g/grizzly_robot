@@ -34,7 +34,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 #include "geometry_msgs/Twist.h"
 #include "grizzly_msgs/Ambience.h"
 #include "grizzly_msgs/Status.h"
-#include "puma_motor_msgs/MultiStatus.h"
+#include "grizzly_motor_msgs/MultiStatus.h"
 
 namespace grizzly_base
 {
@@ -58,7 +58,7 @@ private:
   ros::Subscriber puma_status_sub_;
   ros::Subscriber cmd_vel_sub_;
 
-  puma_motor_msgs::MultiStatus pumas_status_msg_;
+  grizzly_motor_msgs::MultiStatus pumas_status_msg_;
   grizzly_msgs::Status mcu_status_msg_;
   geometry_msgs::Twist cmd_vel_msg_;
 
@@ -94,7 +94,7 @@ private:
   void userCmdCallback(const grizzly_msgs::Ambience::ConstPtr& lights_msg);
   void mcuStatusCallback(const grizzly_msgs::Status::ConstPtr& status_msg);
   void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg);
-  void pumaStatusCallback(const puma_motor_msgs::MultiStatus::ConstPtr& status_msg);
+  void pumaStatusCallback(const grizzly_motor_msgs::MultiStatus::ConstPtr& status_msg);
   void timerCb(const ros::TimerEvent&);
   void userTimeoutCb(const ros::TimerEvent&);
   void wakeupTimeoutCb(const ros::TimerEvent&);

@@ -32,53 +32,39 @@
  *
  */
 
-#include <vector>
-#include "boost/assign.hpp"
-#include "boost/shared_ptr.hpp"
 #include "grizzly_base/grizzly_hardware.h"
-#include "puma_motor_driver/driver.h"
-#include "puma_motor_driver/multi_driver_node.h"
 
 namespace grizzly_base
 {
-
-GrizzlyHardware::GrizzlyHardware(ros::NodeHandle& nh, ros::NodeHandle& pnh,
-                                     puma_motor_driver::Gateway& gateway):
-  nh_(nh),
-  pnh_(pnh),
-  gateway_(gateway),
-  active_(false)
+GrizzlyHardware::GrizzlyHardware(ros::NodeHandle& nh, ros::NodeHandle& pnh, grizzly_motor_driver::Interface& interface)
+  : nh_(nh), pnh_(pnh), interface_(interface), active_(false)
 {
-  pnh_.param<double>("gear_ratio", gear_ratio_, 34.97);
-  pnh_.param<int>("encoder_cpr", encoder_cpr_, 1024);
+  pnh_.param<double>("gear_ratio", gear_ratio_, 25.0);
 
-  ros::V_string joint_names = boost::assign::list_of("front_left_wheel")
-      ("front_right_wheel")("rear_left_wheel")("rear_right_wheel");
-  std::vector<uint8_t> joint_canids = boost::assign::list_of(5)(4)(2)(3);
-  std::vector<float> joint_directions = boost::assign::list_of(-1)(1)(-1)(1);
+  ros::V_string joint_names =
+      boost::assign::list_of("front_left_wheel")("front_right_wheel")("rear_left_wheel")("rear_right_wheel");
+  std::vector<uint8_t> joint_canids = boost::assign::list_of(3)(4)(5)(6);
+  std::vector<float> joint_directions = boost::assign::list_of(1)(-1)(1)(-1);
 
   for (uint8_t i = 0; i < joint_names.size(); i++)
   {
-    hardware_interface::JointStateHandle joint_state_handle(joint_names[i],
-        &joints_[i].position, &joints_[i].velocity, &joints_[i].effort);
+    hardware_interface::JointStateHandle joint_state_handle(joint_names[i], &joints_[i].position, &joints_[i].velocity,
+                                                            &joints_[i].effort);
     joint_state_interface_.registerHandle(joint_state_handle);
 
-    hardware_interface::JointHandle joint_handle(
-        joint_state_handle, &joints_[i].velocity_command);
+    hardware_interface::JointHandle joint_handle(joint_state_handle, &joints_[i].velocity_command);
     velocity_joint_interface_.registerHandle(joint_handle);
 
-    puma_motor_driver::Driver driver(gateway_, joint_canids[i], joint_names[i]);
-    driver.clearStatusCache();
-    driver.setEncoderCPR(encoder_cpr_);
-    driver.setGearRatio(gear_ratio_ * joint_directions[i]);
-    driver.setMode(puma_motor_msgs::Status::MODE_SPEED, 0.1, 0.01, 0.0);
+    auto driver = std::shared_ptr<grizzly_motor_driver::Driver>(
+        new grizzly_motor_driver::Driver(interface_, joint_canids[i], joint_names[i]));
+    driver->setGearRatio(gear_ratio_ * joint_directions[i]);
     drivers_.push_back(driver);
   }
 
   registerInterface(&joint_state_interface_);
   registerInterface(&velocity_joint_interface_);
 
-  multi_driver_node_.reset(new puma_motor_driver::MultiDriverNode(nh_, drivers_));
+  node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
 }
 
 /**
@@ -90,78 +76,95 @@ GrizzlyHardware::GrizzlyHardware(ros::NodeHandle& nh, ros::NodeHandle& pnh,
 void GrizzlyHardware::updateJointsFromHardware()
 {
   uint8_t index = 0;
-  BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
+  for (const auto& driver : drivers_)
   {
     Joint* f = &joints_[index];
-    f->effort = driver.lastCurrent();
-    f->position = driver.lastPosition();
-    f->velocity = driver.lastSpeed();
+    f->effort = driver->getOutputCurrent();
+    f->position = driver->getMeasuredTravel();
+    f->velocity = driver->getMeasuredVelocity();
     index++;
   }
 }
 
 bool GrizzlyHardware::isActive()
 {
-  if (active_ == false
-     && drivers_[0].isConfigured() == true
-     && drivers_[1].isConfigured() == true
-     && drivers_[2].isConfigured() == true
-     && drivers_[3].isConfigured() == true)
+  for (const auto& driver : drivers_)
   {
-    active_ = true;
-    multi_driver_node_->activePublishers(active_);
-    ROS_INFO("Grizzly Hardware Active.");
+    if (!driver->isRunning())
+    {
+      active_ = false;
+      return false;
+    }
   }
-  else if ((drivers_[0].isConfigured() == false
-    || drivers_[1].isConfigured() == false
-    || drivers_[2].isConfigured() == false
-    || drivers_[3].isConfigured() == false)
-    && active_ == true)
-  {
-    active_ = false;
-    ROS_WARN("Grizzly Hardware Inactive.");
-  }
+  active_ = true;
+  return true;
+}
 
-  return active_;
+bool GrizzlyHardware::anyActive()
+{
+  for (const auto& driver : drivers_)
+  {
+    if (driver->isRunning())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool GrizzlyHardware::isFault()
+{
+  for (const auto& driver : drivers_)
+  {
+    if (driver->isFault())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool GrizzlyHardware::isStopping()
+{
+  for (const auto& driver : drivers_)
+  {
+    if (driver->isStopping())
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 void GrizzlyHardware::requestData()
 {
-  BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
+  for (auto& driver : drivers_)
   {
-    driver.requestFeedbackPowerState();
-  }
-}
-void GrizzlyHardware::powerHasNotReset()
-{
-  // Checks to see if power flag has been reset for each driver
-  BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
-  {
-    if (driver.lastPower() != 0)
-    {
-      active_ = false;
-      ROS_WARN("There was a power rest on Dev: %d, will reconfigure all drivers.", driver.deviceNumber());
-      multi_driver_node_->activePublishers(active_);
-      BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
-      {
-        driver.resetConfiguration();
-      }
-    }
+    driver->requestStatus();
+    driver->requestFeedback();
   }
 }
 
 void GrizzlyHardware::configure()
 {
-  BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
+  for (auto& driver : drivers_)
   {
-    driver.configureParams();
+    driver->run();
   }
 }
-void GrizzlyHardware::verify()
+void GrizzlyHardware::reconfigure()
 {
-  BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
+  for (auto& driver : drivers_)
   {
-    driver.verifyParams();
+    driver->resetState();
+  }
+}
+
+void GrizzlyHardware::triggerStopping()
+{
+  for (auto& driver : drivers_)
+  {
+    driver->setStopping();
   }
 }
 
@@ -181,33 +184,33 @@ void GrizzlyHardware::init()
 void GrizzlyHardware::canRead()
 {
   // Process all received messages through the connected driver instances.
-  puma_motor_driver::Message recv_msg;
-  while (gateway_.recv(&recv_msg))
+  grizzly_motor_driver::Frame rx_frame;
+  while (interface_.receive(&rx_frame))
   {
-    BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
+    for (auto& driver : drivers_)
     {
-      driver.processMessage(recv_msg);
+      driver->readFrame(rx_frame);
     }
   }
 }
 
 void GrizzlyHardware::canSend()
 {
-  gateway_.sendAllQueued();
+  interface_.sendQueued();
 }
 
 bool GrizzlyHardware::connectIfNotConnected()
 {
-  if (!gateway_.isConnected())
+  if (!interface_.isConnected())
   {
-    if (!gateway_.connect())
+    if (!interface_.connect())
     {
-      ROS_ERROR("Error connecting to motor driver gateway. Retrying in 1 second.");
+      ROS_ERROR("Error connecting to motor driver interface. Retrying in 1 second.");
       return false;
     }
     else
     {
-      ROS_INFO("Connection to motor driver gateway successful.");
+      ROS_INFO("Connection to motor driver interface successful.");
     }
   }
   return true;
@@ -221,16 +224,16 @@ bool GrizzlyHardware::connectIfNotConnected()
 void GrizzlyHardware::command()
 {
   uint8_t i = 0;
-  BOOST_FOREACH(puma_motor_driver::Driver& driver, drivers_)
+  for (auto& driver : drivers_)
   {
-    driver.commandSpeed(joints_[i].velocity_command);
+    driver->setSpeed(joints_[i].velocity_command);
+    driver->commandSpeed();
     i++;
   }
 }
 
-std::vector<puma_motor_driver::Driver>& GrizzlyHardware::getDrivers()
+std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> GrizzlyHardware::getDrivers()
 {
-    return drivers_;
+  return drivers_;
 }
-
 }  // namespace grizzly_base
