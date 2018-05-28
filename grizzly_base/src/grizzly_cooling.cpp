@@ -39,7 +39,8 @@ namespace grizzly_base
 
 const double GrizzlyCooling::LINEAR_VEL_THRESHOLD = 0.1;  // m/s
 const double GrizzlyCooling::ANGULAR_VEL_THRESHOLD = 0.4;  // rad/s
-const double GrizzlyCooling::MOITON_COMMAND_TIMEOUT = 3.0;  // Seconds.
+const double GrizzlyCooling::MOITON_COMMAND_TIMEOUT = 3.0;  // seconds
+const double GrizzlyCooling::FAN_COMMAND_TIMEOUT = 5.0;  // seconds
 
 GrizzlyCooling::GrizzlyCooling(ros::NodeHandle* nh) :
   nh_(nh)
@@ -47,37 +48,27 @@ GrizzlyCooling::GrizzlyCooling(ros::NodeHandle* nh) :
   cmd_fans_pub_ = nh_->advertise<std_msgs::Bool>("mcu/enable_fan", 1);
 
   status_sub_ = nh_->subscribe("mcu/status", 1, &GrizzlyCooling::statusCallback, this);
-  cmd_vel_sub_ = nh_->subscribe("cmd_vel", 1, &GrizzlyCooling::cmdVelCallback, this);
+  cmd_vel_sub_ = nh_->subscribe("grizzly_velocity_controller/cmd_vel", 1, &GrizzlyCooling::cmdVelCallback, this);
 
-  cmd_fans_timer_ = nh_->createTimer(ros::Duration(1.0/10), &GrizzlyCooling::cmdFansCallback, this);
+  cmd_fans_timer_ = nh_->createTimer(ros::Duration(1.0 / FAN_COMMAND_TIMEOUT), &GrizzlyCooling::cmdFansCallback, this);
 
   cmd_fans_msg_.data = false;
 }
 
 void GrizzlyCooling::statusCallback(const grizzly_msgs::Status::ConstPtr& status)
 {
-  // if (status->charger_connected)
-  // {
-  //   cmd_fans_msg_.fans[grizzly_msgs::Fans::CHARGER_BAY_INTAKE] = grizzly_msgs::Fans::FAN_ON_HIGH;
-  //   cmd_fans_msg_.fans[grizzly_msgs::Fans::CHARGER_BAY_EXHAUST] = grizzly_msgs::Fans::FAN_ON_HIGH;
-  //   charger_disconnected_ = false;
-  // }
-  // else if (!charger_disconnected_)
-  // {
-  //   cmd_fans_msg_.fans[grizzly_msgs::Fans::CHARGER_BAY_INTAKE] = grizzly_msgs::Fans::FAN_ON_LOW;
-  //   cmd_fans_msg_.fans[grizzly_msgs::Fans::CHARGER_BAY_EXHAUST] = grizzly_msgs::Fans::FAN_ON_LOW;
-  //   charger_disconnected_ = true;
-  // }
 }
+
 void GrizzlyCooling::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& twist)
 {
-  if (twist->linear.x >= LINEAR_VEL_THRESHOLD ||
-      twist->linear.y >= LINEAR_VEL_THRESHOLD ||
-      twist->angular.z >= ANGULAR_VEL_THRESHOLD)
+  if (fabs(twist->linear.x) >= LINEAR_VEL_THRESHOLD ||
+      fabs(twist->angular.z) >= ANGULAR_VEL_THRESHOLD)
   {
     cmd_fans_msg_.data = true;
+    last_motion_cmd_time_ = ros::Time::now().toSec();
   }
-  last_motion_cmd_time_ = ros::Time::now().toSec();
+
+  cmd_fans_pub_.publish(cmd_fans_msg_);
 }
 
 void GrizzlyCooling::cmdFansCallback(const ros::TimerEvent&)

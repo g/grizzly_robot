@@ -58,7 +58,6 @@ private:
 
   ros::Timer cmd_fans_timer_;
 
-  // bool charger_disconnected_;
   double last_motion_cmd_time_;
   std_msgs::Bool cmd_fans_msg_;
 
@@ -66,6 +65,7 @@ private:
   static const double LINEAR_VEL_THRESHOLD;
   static const double ANGULAR_VEL_THRESHOLD;
   static const double MOITON_COMMAND_TIMEOUT;
+  static const double FAN_COMMAND_TIMEOUT;
 
   void statusCallback(const grizzly_msgs::Status::ConstPtr& status);
   void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& twist);

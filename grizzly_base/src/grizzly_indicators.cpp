@@ -40,7 +40,7 @@ GrizzlyIndicators::GrizzlyIndicators(ros::NodeHandle* nh) :
   // Subscribers
   mcu_status_sub_ = nh_->subscribe("mcu/status", 1, &GrizzlyIndicators::mcuStatusCallback, this);
   gps_status_sub_ = nh_->subscribe("fix", 1, &GrizzlyIndicators::gpsStatusCallback, this);
-  cmd_vel_sub_ = nh_->subscribe("cmd_vel", 1, &GrizzlyIndicators::cmdVelCallback, this);
+  cmd_vel_sub_ = nh_->subscribe("grizzly_velocity_controller/cmd_vel", 1, &GrizzlyIndicators::cmdVelCallback, this);
 
   // Timers
   pub_timer_ = nh_->createTimer(ros::Duration(1.0/5.0), &GrizzlyIndicators::timerCb, this);
@@ -135,7 +135,6 @@ void GrizzlyIndicators::updateMessage(double gps_msg_secs)
 
   // (Temporary) If robot is moving, turn on autopilot light indicator
   if (cmd_vel_msg_.linear.x != 0.0 ||
-      cmd_vel_msg_.linear.y != 0.0 ||
       cmd_vel_msg_.angular.z != 0.0)
   {
     indicator_lights_[1] = grizzly_msgs::Indicators::INDICATOR_ON;

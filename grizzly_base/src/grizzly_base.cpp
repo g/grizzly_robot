@@ -155,9 +155,7 @@ int main(int argc, char* argv[])
   // Create the socket rosserial server in a background ASIO event loop.
   boost::asio::io_service io_service;
 
-  // For use the serial rosserial server to connect over socat. Future work
-  // will create a native UDP rosserial server that this can migrate to. Specify
-  // baud rate because we have to, but in reality it doesn't matter.
+  // Connect to the MCU using rosserial_server_upd.
   new rosserial_server::UdpSocketSession(io_service, udp::endpoint(address::from_string("192.168.131.1"), 11411),
                                          udp::endpoint(address::from_string("192.168.131.2"), 11411));
   boost::thread(boost::bind(&boost::asio::io_service::run, &io_service));

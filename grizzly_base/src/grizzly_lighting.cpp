@@ -35,10 +35,6 @@ namespace States
   {
     Idle = 0,
     Driving,
-    Charged,
-    Charging,
-    LowBattery,
-    NeedsReset,
     Fault,
     Stopped,
     NumberOfStates
@@ -72,8 +68,7 @@ GrizzlyLighting::GrizzlyLighting(ros::NodeHandle* nh) :
 
   user_cmds_sub_ = nh_->subscribe("mcu/cmd_ambience", 1, &GrizzlyLighting::userCmdCallback, this);
   mcu_status_sub_ = nh_->subscribe("mcu/status", 1, &GrizzlyLighting::mcuStatusCallback, this);
-  // puma_status_sub_ = nh_->subscribe("status", 1, &GrizzlyLighting::pumaStatusCallback, this);
-  cmd_vel_sub_ = nh_->subscribe("cmd_vel", 1, &GrizzlyLighting::cmdVelCallback, this);
+  cmd_vel_sub_ = nh_->subscribe("grizzly_velocity_controller/cmd_vel", 1, &GrizzlyLighting::cmdVelCallback, this);
 
   pub_timer_ = nh_->createTimer(ros::Duration(1.0/5), &GrizzlyLighting::timerCb, this);
   user_timeout_ = nh_->createTimer(ros::Duration(1.0/1), &GrizzlyLighting::userTimeoutCb, this);
@@ -86,53 +81,19 @@ GrizzlyLighting::GrizzlyLighting(ros::NodeHandle* nh) :
   patterns_.fault.push_back(boost::assign::list_of(Off)(High)(Off)(High));
   patterns_.fault.push_back(boost::assign::list_of(High)(Off)(High)(Off));
 
-  patterns_.reset.push_back(boost::assign::list_of(High)(High)(Off)(Off));
-  patterns_.reset.push_back(boost::assign::list_of(Off)(Off)(High)(High));
-  
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(Low)(Low)(Low)(Low));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(MedLow)(MedLow)(MedLow)(MedLow));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(Med)(Med)(Med)(Med));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(MedHigh)(MedHigh)(MedHigh)(MedHigh));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(High)(High)(High)(High));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(MedHigh)(MedHigh)(MedHigh)(MedHigh));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(Med)(Med)(Med)(Med));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(MedLow)(MedLow)(MedLow)(MedLow));
-  patterns_.low_battery.push_back(
-    boost::assign::list_of(Low)(Low)(Low)(Low));
-
-  patterns_.charged.push_back(
-    boost::assign::list_of(High)(High)(High)(High));
-
-  patterns_.charging.push_back(
-    boost::assign::list_of(High)(Off)(Off)(Off));
-  patterns_.charging.push_back(
-    boost::assign::list_of(Off)(High)(Off)(Off));
-  patterns_.charging.push_back(
-    boost::assign::list_of(Off)(Off)(High)(Off));
-  patterns_.charging.push_back(
-    boost::assign::list_of(Off)(Off)(Off)(High));
-
   patterns_.driving.push_back(boost::assign::list_of(High)(High)(High)(High));
 
   patterns_.idle.push_back(boost::assign::list_of(Low)(Low)(Low)(Low));
 
-  for(int i = 0; i < 13; i++)
+  for (int i = 0; i < 13; i++)
   {
-  patterns_.idle.push_back(
-    boost::assign::list_of(Low + i*20)(Low + i*20)(Low + i*20)(Low + i*20));
+    patterns_.idle.push_back(
+      boost::assign::list_of(Low + i*20)(Low + i*20)(Low + i*20)(Low + i*20));
   }
-  for(int j = 0; j < 13; j++)
+  for (int j = 0; j < 13; j++)
   {
-  patterns_.idle.push_back(
-    boost::assign::list_of(High - j*20)(High - j*20)(High - j*20)(High - j*20));
+    patterns_.idle.push_back(
+      boost::assign::list_of(High - j*20)(High - j*20)(High - j*20)(High - j*20));
   }
 
 }
@@ -142,6 +103,22 @@ void GrizzlyLighting::setLights(grizzly_msgs::Ambience* lights, uint32_t pattern
   for (int i = 0; i < 4; i++)
   {
     lights->body_lights[i] = pattern[i];
+  }
+  if (state_ == States::Driving)
+  {
+    lights->beep = Intensity::Med;
+  }
+  else
+  {
+    lights->beep = Intensity::Off;
+  }
+  if (state_ <= States::Driving)
+  {
+    lights->beacon =  Intensity::High;
+  }
+  else
+  {
+    lights->beacon = Intensity::Off;
   }
 }
 
@@ -158,11 +135,6 @@ void GrizzlyLighting::mcuStatusCallback(const grizzly_msgs::Status::ConstPtr& st
 {
   mcu_status_msg_ = *status_msg;
 }
-
-// void GrizzlyLighting::pumaStatusCallback(const puma_motor_msgs::MultiStatus::ConstPtr& status_msg)
-// {
-//   pumas_status_msg_ = *status_msg;
-// }
 
 void GrizzlyLighting::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
@@ -187,13 +159,13 @@ void GrizzlyLighting::userTimeoutCb(const ros::TimerEvent&)
 void GrizzlyLighting::wakeupTimeoutCb(const ros::TimerEvent&)
 {
   patterns_.idle.clear();
-  patterns_.idle.push_back(boost::assign::list_of(0x05)(0x05)(0x05)(0x05)); // After wakeup finishes set idle pattern to "Low" 
+  patterns_.idle.push_back(boost::assign::list_of(Intensity::Low)(Intensity::Low)(Intensity::Low)(Intensity::Low));
 }
 
 //TODO: Add fault check based on motor controller status message.
 void GrizzlyLighting::updateState()
 {
-  if (mcu_status_msg_.external_stop_engaged == true)
+  if (mcu_status_msg_.stop_engaged == true)
   {
     state_ = States::Stopped;
   }
@@ -209,12 +181,7 @@ void GrizzlyLighting::updateState()
   // {
   //   state_ = States::Fault;
   // }
-  else if (mcu_status_msg_.measured_battery <= 24.0)
-  {
-    state_ = States::LowBattery;
-  }
   else if (cmd_vel_msg_.linear.x != 0.0 ||
-           cmd_vel_msg_.linear.y != 0.0 ||
            cmd_vel_msg_.angular.z != 0.0)
   {
     state_ = States::Driving;
@@ -247,34 +214,6 @@ void GrizzlyLighting::updatePattern()
         current_pattern_count_ = 0;
       }
       memcpy(&current_pattern_, &patterns_.fault[current_pattern_count_], sizeof(current_pattern_));
-      break;
-    case States::NeedsReset:
-      if (current_pattern_count_ >= patterns_.reset.size())
-      {
-        current_pattern_count_ = 0;
-      }
-      memcpy(&current_pattern_, &patterns_.reset[current_pattern_count_], sizeof(current_pattern_));
-      break;
-    case States::LowBattery:
-      if (current_pattern_count_ >= patterns_.low_battery.size())
-      {
-        current_pattern_count_ = 0;
-      }
-      memcpy(&current_pattern_, &patterns_.low_battery[current_pattern_count_], sizeof(current_pattern_));
-      break;
-    case States::Charged:
-      if (current_pattern_count_ >= patterns_.charged.size())
-      {
-        current_pattern_count_ = 0;
-      }
-      memcpy(&current_pattern_, &patterns_.charged[current_pattern_count_], sizeof(current_pattern_));
-      break;
-    case States::Charging:
-      if (current_pattern_count_ >= patterns_.charging.size())
-      {
-        current_pattern_count_ = 0;
-      }
-      memcpy(&current_pattern_, &patterns_.charging[current_pattern_count_], sizeof(current_pattern_));
       break;
     case States::Driving:
       if (current_pattern_count_ >= patterns_.driving.size())
