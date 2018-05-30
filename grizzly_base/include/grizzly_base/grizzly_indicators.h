@@ -82,7 +82,7 @@ private:
   static constexpr double BATTERY_CAPACITY_ = 105*48*2; // 105Ah * 48V * 2 Battery Packs
   // Constants used for initial SOC calculation
   static constexpr double A1_ = 0.5256, B1_ = 50.09, C1_ = 0.0485,
-                      A2_ = 0.8292, B2_ = 51.94, C2_ = 2.822;
+                          A2_ = 0.8292, B2_ = 51.94, C2_ = 2.822;
 
   bool first_mcu_msg_received_;
   double instantaneous_power_;

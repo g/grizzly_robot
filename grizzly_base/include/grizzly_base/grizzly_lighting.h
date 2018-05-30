@@ -55,10 +55,10 @@ private:
 
   ros::Subscriber user_cmds_sub_;
   ros::Subscriber mcu_status_sub_;
-  ros::Subscriber puma_status_sub_;
+  ros::Subscriber drivers_status_sub_;
   ros::Subscriber cmd_vel_sub_;
 
-  grizzly_motor_msgs::MultiStatus pumas_status_msg_;
+  grizzly_motor_msgs::MultiStatus driver_status_msg_;
   grizzly_msgs::Status mcu_status_msg_;
   geometry_msgs::Twist cmd_vel_msg_;
 
@@ -77,10 +77,7 @@ private:
   {
     LightsPatterns stopped;
     LightsPatterns fault;
-    LightsPatterns reset;
     LightsPatterns low_battery;
-    LightsPatterns charged;
-    LightsPatterns charging;
     LightsPatterns driving;
     LightsPatterns idle;
   }
@@ -94,7 +91,7 @@ private:
   void userCmdCallback(const grizzly_msgs::Ambience::ConstPtr& lights_msg);
   void mcuStatusCallback(const grizzly_msgs::Status::ConstPtr& status_msg);
   void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg);
-  void pumaStatusCallback(const grizzly_motor_msgs::MultiStatus::ConstPtr& status_msg);
+  void driversStatusCallback(const grizzly_motor_msgs::MultiStatus::ConstPtr& status_msg);
   void timerCb(const ros::TimerEvent&);
   void userTimeoutCb(const ros::TimerEvent&);
   void wakeupTimeoutCb(const ros::TimerEvent&);
