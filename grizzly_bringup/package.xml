@@ -5,9 +5,8 @@
   <description>Scripts for installing Grizzly's robot software.</description>
 
   <author email="mpurvis@clearpathrobotics.com">Mike Purvis</author>
-  <author email="tbaltovski@clearpathrobotics.com">Tony Baltovski</author>
 
-  <maintainer email="mpurvis@clearpathrobotics.com">Mike Purvis</maintainer>
+  <maintainer email="tbaltovski@clearpathrobotics.com">Tony Baltovski</maintainer>
 
   <license>BSD</license>
 
@@ -17,7 +16,6 @@
   <build_depend>roslaunch</build_depend>
 
   <exec_depend>microstrain_3dmgx2_imu</exec_depend>
-
   <exec_depend>diagnostic_aggregator</exec_depend>
   <exec_depend>grizzly_base</exec_depend>
   <exec_depend>grizzly_description</exec_depend>
