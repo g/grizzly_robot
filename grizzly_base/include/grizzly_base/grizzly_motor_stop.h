@@ -40,6 +40,7 @@ public:
   {
     pub_ = nh_->advertise<std_msgs::Bool>("mcu/enable_motors", 1);
     timer_pub_ = nh_->createTimer(ros::Duration(1.0 / frequency_), &MotorStopPublisher::pubTimerCallback, this);
+    status_timer_ = nh_->createTimer(ros::Duration(1.0 / frequency_), &MotorStopPublisher::mcuTimeoutCallback, this);
 
     status_sub_ = nh_->subscribe("mcu/status", 1, &MotorStopPublisher::mcuStatusCallback, this);
 
@@ -47,6 +48,8 @@ public:
     {
       offboard_sub_ = nh_->subscribe("mcu/offboard_stop", 1, &MotorStopPublisher::externalStopCallback, this);
     }
+
+    last_mcu_update_ = ros::Time::now().toSec();
   }
 
   void pubTimerCallback(const ros::TimerEvent&)
@@ -54,6 +57,16 @@ public:
     msg_.data = enabled_;
     pub_.publish(msg_);
   }
+
+  void mcuTimeoutCallback(const ros::TimerEvent&)
+  {
+    if ((ros::Time::now().toSec() - last_mcu_update_ ) >= 5.0)
+    {
+      stopped_ = true;
+      ROS_ERROR_THROTTLE(1, "Grizzly lost connection to MCU.");
+    }
+  }
+
 
   void externalStopCallback(const std_msgs::Bool::ConstPtr& msg)
   {
@@ -65,6 +78,7 @@ public:
     stopped_ = msg->stop_engaged;
     if (stopped_)
       has_stopped_ = true;
+    last_mcu_update_ = ros::Time::now().toSec();
   }
 
   bool getStopStatus() const
@@ -96,7 +110,9 @@ private:
   ros::Subscriber offboard_sub_;
   ros::Subscriber status_sub_;
   ros::Timer timer_pub_;
+  ros::Timer status_timer_;
   double frequency_;
+  double last_mcu_update_;
   bool offboard_stop_;
   bool enabled_;
   bool stopped_;

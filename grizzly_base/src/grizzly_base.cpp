@@ -77,6 +77,10 @@ void controlThread(ros::Rate rate, grizzly_base::GrizzlyHardware* robot, control
       motor_stop->publishStop();
       robot->triggerStopping();
     }
+    else if (motor_stop->getStopStatus())
+    {
+      robot->triggerStopping();
+    }
     else if (!robot->isStopping() && motor_stop->shouldReset() && robot->anyActive())
     {
       robot->triggerStopping();
