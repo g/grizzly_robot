@@ -2,6 +2,26 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated Udev, maintainer and CAN bridge interface.
+* [grizzly_base] Added check for MCU timeout.
+* [grizzly_base] Fixed cooling logic.
+* Remove temp subscriber.
+* Fix dependancy on grizzly_motor_msgs. Remove references to puma_motor_msgs.
+* Refine fault and estop handling.
+* Added runtime fault handling.
+* Changes to enable re-enabling motors after estop.
+* Fixed static variable issue. First time CM moves wheels. Fixed direction.
+* First steps to switch to grizzly motor driver
+* Added check to ensure battery_level\_ is not negative
+* Added indicator lighting control to PC. Also added estimation of robot power levels from MCU status
+* Adding light command control to the PC. Cleaning up some old indigo code. Updating to package format 2.
+* Removing commented out packages
+* Added UDP rosserial connection and cooling via cmd_vel.
+* Return false instead of throwing it, whoops.
+* Contributors: Aditya Bhattacharjee, Michael Hosmar, Mike Purvis, Mohamed Elshatshat, Tony Baltovski, abhattacharjee
+
 0.2.1 (2015-10-17)
 ------------------
 * Launchfiles from RS232 comms option.

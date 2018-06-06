@@ -2,6 +2,16 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated Udev, maintainer and CAN bridge interface.
+* Added install script for can up script.  Added provider to add network depend to systemd service.
+* Adding light command control to the PC. Cleaning up some old indigo code. Updating to package format 2.
+* Removing commented out packages
+* Cleaning up merge issues that I missed
+* Added UDP rosserial connection and cooling via cmd_vel.
+* Contributors: Michael Hosmar, Mohamed Elshatshat, Tony Baltovski
+
 0.2.1 (2015-10-17)
 ------------------
 
