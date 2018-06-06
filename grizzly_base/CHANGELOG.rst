@@ -2,8 +2,8 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2018-06-06)
+------------------
 * Updated Udev, maintainer and CAN bridge interface.
 * [grizzly_base] Added check for MCU timeout.
 * [grizzly_base] Fixed cooling logic.
