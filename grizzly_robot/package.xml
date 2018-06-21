@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>grizzly_robot</name>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
   <description>Metapackage for Grizzly robot computers.</description>
   <maintainer email="tbaltovski@clearpathrobotics.com">Tony Baltovski</maintainer>
 

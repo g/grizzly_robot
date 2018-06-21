@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>grizzly_base</name>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
   <description>Grizzly's mobility and sensor base.</description>
 
   <author email="rgariepy@clearpathrobotics.com">Ryan Gariepy</author>

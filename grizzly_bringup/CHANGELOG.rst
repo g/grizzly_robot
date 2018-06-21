@@ -2,8 +2,8 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.1 (2018-06-21)
+------------------
 * [grizzly_bringup] Removed install for non-existent file.
 * Contributors: Tony Baltovski
 
