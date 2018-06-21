@@ -2,6 +2,11 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [grizzly_bringup] Removed install for non-existent file.
+* Contributors: Tony Baltovski
+
 0.3.0 (2018-06-06)
 ------------------
 * Updated Udev, maintainer and CAN bridge interface.
