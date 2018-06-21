@@ -11,10 +11,6 @@ install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-install(FILES scripts/can-udp-bridge.conf
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
 install(PROGRAMS scripts/install scripts/can_up.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
