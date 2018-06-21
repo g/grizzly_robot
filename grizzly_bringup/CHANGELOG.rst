@@ -2,8 +2,8 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.2 (2018-06-21)
+------------------
 * Sensor addition (`#11 <https://github.com/g/grizzly_robot/issues/11>`_)
   * Updated most of the payload launches
   * Changed default ptu port for udev
