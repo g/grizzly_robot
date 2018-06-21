@@ -2,8 +2,8 @@
   <!-- GPS serial comms -->
   <group ns="navsat">
     <node pkg="nmea_comms" type="serial_node" name="nmea_serial_node">
-      <param name="port" value="$(optenv GRIZZLY_NAVSAT_PORT /dev/clearpath/gps)" />
-      <param name="baud" value="$(optenv GRIZZLY_NAVSAT_BAUD 115200)" />
+      <param name="port" value="$(optenv GRIZZLY_NAVSAT_PORT /dev/clearpath/ublox)" />
+      <param name="baud" value="$(optenv GRIZZLY_NAVSAT_BAUD 9600)" />
     </node>
 
     <!-- interpretation -->

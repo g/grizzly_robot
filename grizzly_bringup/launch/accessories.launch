@@ -5,4 +5,23 @@ Be careful that the defaults in this file are kept aligned with those
 in the URDF. See grizzly_description/urdf/accessories.urdf.xacro.
 -->
 <launch>
+  <include file="$(find grizzly_bringup)/launch/core/gps.launch"/>
+  <include file="$(find grizzly_bringup)/launch/core/um6.launch"/>
+
+  <group if="$(optenv GRIZZLY_HDL32_ENABLED false)" >
+    <include file="$(find grizzly_bringup)/launch/payloads/32e_points.launch"/>
+  </group>
+
+  <group if="$(optenv GRIZZLY_LMS_ENABLED false)" >
+    <include file="$(find grizzly_bringup)/launch/payloads/lms1xx.launch"/>
+  </group>
+
+  <group if="$(optenv GRIZZLY_PTU_ENABLED false)" >
+    <include file="$(find grizzly_bringup)/launch/payloads/ptu46_actions.launch"/>
+  </group>
+
+  <group if="$(optenv GRIZZLY_BB2_ENABLED false)" >
+    <include file="$(find grizzly_bringup)/launch/payloads/bumblebee.launch"/>
+  </group>
+
 </launch>

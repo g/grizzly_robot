@@ -1,18 +1,10 @@
 <launch>
-  <!-- start nodelet manager and load driver nodelet -->
-  <node machine="user" pkg="nodelet" type="nodelet" name="velodyne_nodelet_manager"
-        args="manager" />
-  <node machine="user" pkg="nodelet" type="nodelet" name="driver_nodelet"
-        args="load velodyne_driver/DriverNodelet velodyne_nodelet_manager" >
+  <node pkg="velodyne_driver" type="velodyne_node" name="velodyne_driver">
     <param name="model" value="32E"/>
-    <param name="pcap" value=""/>
+    <param name="device_ip" value="$(optenv GRIZZLY_HDL32_IP 192.168.130.20)"/>
   </node>
 
-  <!-- start cloud nodelet -->
-  <node machine="user" pkg="nodelet" type="nodelet" name="cloud_nodelet"
-        args="load velodyne_pointcloud/CloudNodelet velodyne_nodelet_manager">
-    <param name="calibration" value="/home/administrator/ros/32db.yaml"/>
-  </node>
-
-
+  <node pkg="velodyne_pointcloud" type="cloud_node" name="velodyne_pointcloud"/>
 </launch>
+
+

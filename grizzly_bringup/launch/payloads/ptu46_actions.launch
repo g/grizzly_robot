@@ -1,9 +1,12 @@
 <launch>
-	<node machine="user" name="ptu" pkg="ptu46" type="ptu46" output="screen">
-		<param name="port" value="/dev/prolific"/>
-	</node>
-	<node machine="user" name="ptu_action_server" pkg="ptu46" type="ptu_action_server.py" output="screen">
-		<remap from="cmd" to="/ptu/cmd"/>
-		<remap from="state" to="/ptu/state"/>
-	</node>
+  <arg name="port" default="$(optenv GRIZZLY_PTU_PORT /dev/clearpath/ptu)"/>
+  <arg name="limits_enabled" default="$(optenv GRIZZLY_LIMITS_ENABLED false)"/>
+
+  <node name="ptu_driver" pkg="flir_ptu_driver" type="ptu_node" ns="ptu" respawn="true">
+    <param name="port" value="$(arg port)" />
+    <param name="limits_enabled" value="$(arg limits_enabled)" />
+    <remap from="state" to="/joint_states" />
+  </node>
+
 </launch>
+

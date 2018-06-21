@@ -1,7 +1,6 @@
 <launch>
-  <group ns="lidar">
-    <node machine="user" pkg="LMS1xx" type="LMS100" name="lidar">
-      <param name="host" value="192.168.1.200" />
-    </node>
-  </group>
+  <include file="$(find lms1xx)/launch/LMS1xx.launch">
+    <arg name="host" value="$(optenv GRIZZLY_LMS1XX_IP 192.168.130.21)"/>
+  </include>
 </launch>
+
