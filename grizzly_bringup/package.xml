@@ -13,7 +13,6 @@
   <url type="website">http://wiki.ros.org/Robots/Grizzly</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roslaunch</build_depend>
 
   <exec_depend>microstrain_3dmgx2_imu</exec_depend>
   <exec_depend>diagnostic_aggregator</exec_depend>
@@ -31,6 +30,8 @@
   <exec_depend>lms1xx</exec_depend>
   <exec_depend>flir_ptu_driver</exec_depend>
   <exec_depend>pointgrey_camera_driver</exec_depend>
+
+  <test_depend>roslaunch</test_depend>
 
   <export>
   </export>
