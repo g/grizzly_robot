@@ -2,8 +2,8 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.4 (2018-06-22)
+------------------
 * [grizzly_bringup] Installed CAN systemhd job and make roslaunch a test dep.
 * Contributors: Tony Baltovski
 
