@@ -23,9 +23,9 @@ main_job.install(Provider=AddNetworkDepend)
 
 class GrizzlyExtras(robot_upstart.providers.Systemd):
     def generate_install(self):
-        with open(find_in_workspaces(project="grizzly_bringup", path="scripts/can_up.sh")[0]) as f:
+        with open(find_in_workspaces(project="grizzly_bringup", path="can_up.sh")[0]) as f:
             can_conf_contents = f.read()
-        with open(find_in_workspaces(project="grizzly_bringup", path="scripts/systemd_job.conf")[0]) as f:
+        with open(find_in_workspaces(project="grizzly_bringup", path="systemd_job.conf")[0]) as f:
             systemd_job = f.read()
         self._set_job_path()
 
