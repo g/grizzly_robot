@@ -2,6 +2,11 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Removed scripts in file locations as scripts are installed to root share
+* Contributors: Dave Niewinski, Tony Baltovski
+
 0.3.2 (2018-06-21)
 ------------------
 * Sensor addition (`#11 <https://github.com/g/grizzly_robot/issues/11>`_)
