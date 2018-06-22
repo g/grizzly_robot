@@ -2,8 +2,8 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.3 (2018-06-22)
+------------------
 * Removed scripts in file locations as scripts are installed to root share
 * Contributors: Dave Niewinski, Tony Baltovski
 
