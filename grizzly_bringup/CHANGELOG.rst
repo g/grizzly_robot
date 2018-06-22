@@ -2,6 +2,11 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [grizzly_bringup] Installed CAN systemhd job and make roslaunch a test dep.
+* Contributors: Tony Baltovski
+
 0.3.3 (2018-06-22)
 ------------------
 * Removed scripts in file locations as scripts are installed to root share
