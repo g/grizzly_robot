@@ -39,7 +39,7 @@ GrizzlyIndicators::GrizzlyIndicators(ros::NodeHandle* nh) :
 
   // Subscribers
   mcu_status_sub_ = nh_->subscribe("mcu/status", 1, &GrizzlyIndicators::mcuStatusCallback, this);
-  gps_status_sub_ = nh_->subscribe("fix", 1, &GrizzlyIndicators::gpsStatusCallback, this);
+  gps_status_sub_ = nh_->subscribe("navsat/fix", 1, &GrizzlyIndicators::gpsStatusCallback, this);
   cmd_vel_sub_ = nh_->subscribe("grizzly_velocity_controller/cmd_vel", 1, &GrizzlyIndicators::cmdVelCallback, this);
 
   // Timers
