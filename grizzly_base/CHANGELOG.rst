@@ -2,8 +2,8 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.5 (2018-07-05)
+------------------
 * [grizzly_base] Updated GPS indicator topic.
 * Contributors: Tony Baltovski
 
