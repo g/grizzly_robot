@@ -75,25 +75,18 @@ GrizzlyDiagnosticUpdater::GrizzlyDiagnosticUpdater()
 
 void GrizzlyDiagnosticUpdater::generalDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
 {
-  stat.addf("MCU uptime", "%d seconds", last_status_->mcu_uptime.toSec());
+  stat.addf("MCU uptime", "%d seconds", static_cast<uint32_t>(last_status_->mcu_uptime.toSec()));
   stat.add("External stop status", last_status_->external_stop_engaged ? "present" : "absent");
-  stat.add("Run/stop status", last_status_->external_stop_engaged ? "running" : "stopped");
+  stat.add("Run/stop status", last_status_->stop_engaged ? "stopped" : "running");
 
-  // if (!last_status_->drivers_active)
-  // {
-  //   stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Stop loop open, platform immobilized.");
-  // }
-  // else
-  // {
-    stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "System OK.");
-  // }
+  stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "System OK.");
 }
 
 void GrizzlyDiagnosticUpdater::batteryDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
 {
   stat.add("Battery Voltage (V)", last_status_->measured_battery);
 
-  if (last_status_->measured_battery > 30.0)
+  if (last_status_->measured_battery > 60.0)
   {
     stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Battery overvoltage.");
   }
@@ -101,11 +94,11 @@ void GrizzlyDiagnosticUpdater::batteryDiagnostics(diagnostic_updater::Diagnostic
   {
     stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Battery voltage not detected, check BATT fuse.");
   }
-  else if (last_status_->measured_battery < 20.0)
+  else if (last_status_->measured_battery < 46.5)
   {
     stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Battery critically under voltage.");
   }
-  else if (last_status_->measured_battery < 24.0)
+  else if (last_status_->measured_battery < 48.0)
   {
     stat.summary(diagnostic_msgs::DiagnosticStatus::WARN, "Battery low voltage.");
   }
@@ -140,30 +133,29 @@ void GrizzlyDiagnosticUpdater::voltageDiagnostics(diagnostic_updater::Diagnostic
 
 void GrizzlyDiagnosticUpdater::currentDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
 {
-  // stat.add("Total current (A)", last_status_->total_current);
+  stat.add("Total current (A)", last_status_->current_battery);
 
-  // if (last_status_->total_current > 32.0)
-  // {
-  //   stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Current draw critical.");
-  // }
-  // else if (last_status_->total_current > 20.0)
-  // {
-  //   stat.summary(diagnostic_msgs::DiagnosticStatus::WARN, "Current draw warning.");
-  // }
-  // else if (last_status_->total_current > 10.0)
-  // {
-  //   stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Current draw requires monitoring.");
-  // }
-  // else
-  // {
+  if (last_status_->current_battery > 32.0)
+  {
+     stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Current draw critical.");
+  }
+  else if (last_status_->current_battery > 20.0)
+  {
+    stat.summary(diagnostic_msgs::DiagnosticStatus::WARN, "Current draw warning.");
+  }
+  else if (last_status_->current_battery > 10.0)
+  {
+    stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Current draw requires monitoring.");
+  }
+  else
+  {
     stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Current draw nominal.");
-  // }
+  }
 }
 
 void GrizzlyDiagnosticUpdater::powerDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
 {
   stat.add("Total power consumption (Wh)", last_status_->total_power_consumed);
-  // stat.add("AC power connnected", last_status_->charger_connected);
 
   if (last_status_->total_power_consumed > 260.0)
   {
@@ -181,21 +173,7 @@ void GrizzlyDiagnosticUpdater::powerDiagnostics(diagnostic_updater::DiagnosticSt
 
 void GrizzlyDiagnosticUpdater::temperatureDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
 {
-  // stat.add("PCB temperature (C)", last_status_->pcb_temperature);
   stat.add("MCU temperature (C)", last_status_->mcu_temperature);
-
-  // if (last_status_->pcb_temperature > 100.0)
-  // {
-  //   stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "PCB temperature too HOT.");
-  // }
-  // else if (last_status_->pcb_temperature > 60.0)
-  // {
-  //   stat.summary(diagnostic_msgs::DiagnosticStatus::WARN, "PCB temperature getting warm.");
-  // }
-  // else
-  // {
-  //   stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "PCB temperature OK.");
-  // }
 
   if (last_status_->mcu_temperature > 100.0)
   {
@@ -260,3 +238,4 @@ void GrizzlyDiagnosticUpdater::wirelessMonitorCallback(const ros::TimerEvent& te
 }
 
 }  // namespace grizzly_base
+
