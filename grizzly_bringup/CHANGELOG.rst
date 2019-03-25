@@ -2,6 +2,9 @@
 Changelog for package grizzly_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.5 (2018-07-05)
 ------------------
 
