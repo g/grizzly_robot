@@ -2,8 +2,8 @@
 Changelog for package grizzly_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.6 (2019-03-25)
+------------------
 * Fixing diagnostic updater to work with mcu/status message
 * Contributors: Guy Stoppi
 
